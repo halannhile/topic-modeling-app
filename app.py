@@ -1,4 +1,5 @@
 import streamlit as st
+from nlp import process_files
 
 SUPPORTED_FORMATS = ["csv", "txt", "pdf"]
 
@@ -14,10 +15,11 @@ uploaded_files = st.file_uploader(
 st.divider()
 if uploaded_files:
     with st.columns(3)[1]:
-        st.button(
+        if st.button(
             "Analyze Topics",
             use_container_width=True,
             type="primary",
-        )
+        ):
+            process_files(uploaded_files)
 else:
     st.markdown("_Please upload one or more files for topic analysis._")
