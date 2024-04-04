@@ -1,8 +1,14 @@
 import streamlit as st
 import nlp
 
+st.set_page_config(
+    page_title="Upload Documents",
+    page_icon="📤",
+    layout="centered",
+    initial_sidebar_state="expanded",
+)
 
-st.title("Topic Modeling and Visualization")
+st.title("Upload Documents for Topic Analysis")
 
 uploaded_files = st.file_uploader(
     "Upload files for topic modeling",
