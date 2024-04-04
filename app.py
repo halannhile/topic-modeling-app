@@ -1,14 +1,12 @@
 import streamlit as st
-from nlp import process_files
-
-SUPPORTED_FORMATS = ["csv", "txt", "pdf"]
+import nlp
 
 
 st.title("Topic Modeling and Visualization")
 
 uploaded_files = st.file_uploader(
     "Upload files for topic modeling",
-    type=SUPPORTED_FORMATS,
+    type=nlp.SUPPORTED_INPUT_FORMATS,
     accept_multiple_files=True,
     label_visibility="collapsed",
 )
@@ -20,6 +18,6 @@ if uploaded_files:
             use_container_width=True,
             type="primary",
         ):
-            process_files(uploaded_files)
+            nlp.process_files(uploaded_files)
 else:
     st.markdown("_Please upload one or more files for topic analysis._")
