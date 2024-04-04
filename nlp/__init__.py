@@ -1,4 +1,3 @@
-from turtle import up
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 SUPPORTED_INPUT_FORMATS = ["csv", "txt", "pdf"]
