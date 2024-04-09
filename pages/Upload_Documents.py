@@ -1,6 +1,7 @@
 import streamlit as st
-import nlp
 import zipfile
+
+import nlp
 
 st.set_page_config(
     page_title="Upload Documents",
@@ -9,6 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
 def analyze_button():
     with st.columns(3)[1]:
         return st.button(
@@ -16,6 +18,7 @@ def analyze_button():
             use_container_width=True,
             type="primary",
         )
+
 
 tab1, tab2 = st.tabs(["Upload Dataset", "Upload Document"])
 
@@ -27,7 +30,7 @@ with tab1:
         type=["zip"],
         accept_multiple_files=False,
         label_visibility="collapsed",
-        key="dataset"
+        key="dataset",
     )
     st.divider()
     if uploaded_zip and analyze_button():
@@ -44,7 +47,7 @@ with tab2:
         type=nlp.SUPPORTED_INPUT_FORMATS,
         accept_multiple_files=True,
         label_visibility="collapsed",
-        key="document"
+        key="document",
     )
     st.divider()
     if uploaded_files and analyze_button():
