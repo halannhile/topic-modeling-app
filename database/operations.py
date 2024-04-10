@@ -20,6 +20,8 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
+    # IMPLEMENTATION 1: do not reupload files that are already in the database
+    '''
     # save multiple documents
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
@@ -44,6 +46,23 @@ class DatabaseOperations:
             session.rollback()
         finally:
             session.close()
+    '''
+
+    # IMPLEMENTATION 2: upload duplicate files as long as they are in a new batch
+    def save_documents(self, file_contents, batch_number):
+        session = self.Session()
+        for filename, content in file_contents.items():
+            # Check if the document already exists in the database
+            existing_document = session.query(Document).filter_by(filename=filename).first()
+            if existing_document:
+                # If the document already exists, update its batch number
+                existing_document.batch_number = batch_number
+            else:
+                # If the document does not exist, create a new record
+                document = Document(filename=filename, batch_number=batch_number)
+                session.add(document)
+        session.commit()
+        session.close()
 
     def get_documents(self, batch_number=None):
         session = self.Session()
