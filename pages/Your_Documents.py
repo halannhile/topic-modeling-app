@@ -3,13 +3,15 @@ from database import init_db
 
 def display_documents():
     st.title("Your Documents")
-    db = init_db("sqlite:///topic_modeling.db")
-    documents = db.get_documents()
+    db = init_db("sqlite:///mydatabase.db")
+    documents = db.get_documents()  # No batch_number provided
 
     if documents:
         st.write("Uploaded Documents:")
+        # Display documents in a table format
+        st.write("Batch Number", "Document Name")
         for document in documents:
-            st.write(f"Filename: {document.filename}, Batch Number: {document.batch_number}")
+            st.write(document.batch_number, document.filename)
     else:
         st.write("No documents uploaded yet.")
 

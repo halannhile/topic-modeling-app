@@ -1,3 +1,5 @@
+# database/operations.py
+
 from .models import Base, Document
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -9,6 +11,7 @@ class DatabaseOperations:
         # create tables
         Base.metadata.create_all(self.engine)
 
+    # save a single document
     def save_document(self, filename, batch_number):
         session = self.Session()
         document = Document(filename=filename, batch_number=batch_number)
@@ -16,6 +19,7 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
+    # save multiple documents
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
         for filename, text in file_contents.items():
@@ -24,8 +28,11 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
-    def get_documents(self):
+    def get_documents(self, batch_number=None):  # Make batch_number optional
         session = self.Session()
-        documents = session.query(Document).all()
+        if batch_number is None:
+            documents = session.query(Document).all()
+        else:
+            documents = session.query(Document).filter_by(batch_number=batch_number).all()
         session.close()
         return documents
