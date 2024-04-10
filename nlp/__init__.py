@@ -35,7 +35,6 @@ def process_files(uploaded_files: list[UploadedFile]):
 
     return file_contents
 
-
 def process_zip(uploaded_zip: ZipFile):
     if not uploaded_zip:
         raise ValueError("No zipfile uploaded for processing")

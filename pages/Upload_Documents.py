@@ -8,6 +8,14 @@ import nlp  # process_zip, SUPPORTED_INPUT_FORMATS, process_files
 # Initialize database connection
 db = init_db('sqlite:///appdatabase.db')
 
+def analyze_button():
+    with st.columns(3)[1]:
+        return st.button(
+            "Analyze Topics",
+            use_container_width=True,
+            type="primary",
+        )
+    
 def main():
     st.set_page_config(
         page_title="Upload Documents",
