@@ -7,7 +7,6 @@ import textract
 
 SUPPORTED_INPUT_FORMATS = ["csv", "txt", "pdf", "docx"]
 
-
 def process_files(uploaded_files: list[UploadedFile]):
     if not uploaded_files:
         raise ValueError("No files uploaded for processing")
@@ -24,10 +23,11 @@ def process_files(uploaded_files: list[UploadedFile]):
             file_contents[file.name] = text
         elif file_extension == "csv":
             dataframe = pd.read_csv(file)
-            file_contents[file.name] = dataframe
-        # TODO: reimplement PDF processing
-        # elif file_extension == "pdf":
-        #     text = textract.process(file.getvalue()).decode("utf-8")
+            # Concatenate all columns' values to create the text content
+            text = ' '.join(dataframe.apply(lambda x: ' '.join(x.astype(str)), axis=1))
+            file_contents[file.name] = text
+        elif file_extension == "pdf":
+            text = textract.process(file.getvalue()).decode("utf-8")
             file_contents[file.name] = text
         elif file_extension == "docx":
             text = textract.process(file.getvalue()).decode("utf-8")

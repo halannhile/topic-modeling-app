@@ -1,5 +1,4 @@
-# database/operations.py
-
+import pandas as pd
 from .models import Base, Document
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -12,6 +11,8 @@ class DatabaseOperations:
         # create tables
         Base.metadata.create_all(self.engine)
 
+    ################# SAVE INDIVIDUAL DOCUMENTS FOR TAB 2 #################
+
     # save a single document
     def save_document(self, filename, batch_number):
         session = self.Session()
@@ -19,6 +20,8 @@ class DatabaseOperations:
         session.add(document)
         session.commit()
         session.close()
+
+    ################# SAVE DOCUMENTS (DATSET) FOR TAB 1 #################
 
     # IMPLEMENTATION 1: do not reupload files that are already in the database
     '''
@@ -49,6 +52,7 @@ class DatabaseOperations:
     '''
 
     # IMPLEMENTATION 2: upload duplicate files as long as they are in a new batch
+    '''
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
         for filename, content in file_contents.items():
@@ -63,6 +67,33 @@ class DatabaseOperations:
                 session.add(document)
         session.commit()
         session.close()
+    '''
+
+    def save_documents(self, file_contents, batch_number):
+        session = self.Session()
+        for filename, content in file_contents.items():
+            # check if the document already exists in the database
+            existing_document = session.query(Document).filter_by(filename=filename).first()
+            if existing_document:
+                batch_number -= 1
+                if isinstance(content, pd.DataFrame):
+                    # convert DataFrame to string and update the content
+                    content_str = content.to_string(index=False)
+                    existing_document.content = content_str
+                else:
+                    existing_document.content = content
+            else:
+                # if the document does not exist, create a new record
+                if isinstance(content, pd.DataFrame):
+                    # convert DataFrame to string and store it as content
+                    content_str = content.to_string(index=False)
+                    document = Document(filename=filename, batch_number=batch_number, content=content_str)
+                else:
+                    document = Document(filename=filename, batch_number=batch_number, content=content)
+                session.add(document)
+        session.commit()
+        session.close()
+
 
     def get_documents(self, batch_number=None):
         session = self.Session()
@@ -75,9 +106,9 @@ class DatabaseOperations:
 
     def clear_database(self):
         session = self.Session()
-        # Drop existing table
+        # drop existing table
         Document.__table__.drop(self.engine)
-        # Recreate the table with the updated schema
+        # recreate the table with the updated schema
         Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
@@ -89,4 +120,4 @@ class DatabaseOperations:
         if latest_batch:
             return latest_batch.batch_number
         else:
-            return 0  # Return 0 if no batches exist
+            return 0  # return 0 if no batches exist

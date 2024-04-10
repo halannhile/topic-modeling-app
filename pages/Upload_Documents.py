@@ -1,12 +1,9 @@
-# pages/Upload_Documents.py
-
 import streamlit as st
 from database import init_db
 import zipfile
 import nlp  # process_zip, SUPPORTED_INPUT_FORMATS, process_files
 
-# Initialize database connection
-db = init_db('sqlite:///appdatabase.db')
+db = init_db('sqlite:///app-database.db')
 
 def analyze_button():
     with st.columns(3)[1]:
@@ -63,6 +60,7 @@ def main():
             for uploaded_file in uploaded_files:
                 st.write(uploaded_file.name)
 
+        # TODO: individual file uploads are not saved to db 
         if uploaded_files:
             current_batch_number = db.get_latest_batch_number() + 1
             if st.button("Analyze Topics"):
@@ -71,9 +69,8 @@ def main():
             else:
                 st.markdown("_Please upload one or more files for topic analysis._")
 
-    # Upload button outside tabs
     if st.button("Upload", key="upload_button"):
-        pass  # No action needed
+        pass 
 
 if __name__ == "__main__":
     main()

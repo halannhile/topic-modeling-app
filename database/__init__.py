@@ -1,4 +1,3 @@
-# database/__init__.py
 from .operations import DatabaseOperations
 
 def init_db(db_uri):
