@@ -3,6 +3,7 @@
 from .models import Base, Document
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 
 class DatabaseOperations:
     def __init__(self, db_uri):
@@ -23,10 +24,26 @@ class DatabaseOperations:
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
         for filename, text in file_contents.items():
-            document = Document(filename=filename, batch_number=batch_number)
-            session.add(document)
-        session.commit()
-        session.close()
+            # Check if document with same filename already exists
+            existing_document = session.query(Document).filter_by(filename=filename).first()
+            if existing_document:
+                # Update existing document with new batch number
+                # existing_document.batch_number = batch_number
+                # decrement batch_number and do nothing
+                batch_number -= 1
+            else:
+                # Create new document entry
+                document = Document(filename=filename, batch_number=batch_number)
+                session.add(document)
+        
+        # Commit changes to database
+        try:
+            session.commit()
+        except IntegrityError:
+            # Rollback changes in case of error
+            session.rollback()
+        finally:
+            session.close()
 
     def get_documents(self, batch_number=None):
         session = self.Session()
@@ -39,6 +56,18 @@ class DatabaseOperations:
 
     def clear_database(self):
         session = self.Session()
-        session.query(Document).delete()
+        # Drop existing table
+        Document.__table__.drop(self.engine)
+        # Recreate the table with the updated schema
+        Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
+
+    def get_latest_batch_number(self):
+        session = self.Session()
+        latest_batch = session.query(Document).order_by(Document.batch_number.desc()).first()
+        session.close()
+        if latest_batch:
+            return latest_batch.batch_number
+        else:
+            return 0  # Return 0 if no batches exist

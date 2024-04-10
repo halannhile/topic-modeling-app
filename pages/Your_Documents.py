@@ -11,7 +11,7 @@ def display_documents():
     if documents:
         st.write("Uploaded Documents:")
         # Display documents in a table format
-        st.write("Batch Number", "Document Name", "Upload Time")
+        st.write("Batch Number | ", "Document Name | ", "Upload Time")
         for document in documents:
             st.write(document.batch_number, document.filename, document.upload_time)
     else:
