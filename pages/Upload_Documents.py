@@ -1,13 +1,13 @@
-# pages/Upload_Documents.py
-
 import streamlit as st
 from database import init_db
 import zipfile
 import nlp  # process_zip, SUPPORTED_INPUT_FORMATS, process_files
 
 # Initialize database connection
-db = init_db('sqlite:///mydatabase.db')
+db = init_db('sqlite:///appdatabase.db')
 
+# Global variable to track the current batch number
+current_batch_number = 1
 
 def analyze_button(key):
     with st.columns(3)[1]:
@@ -19,6 +19,8 @@ def analyze_button(key):
         )
 
 def main():
+    global current_batch_number
+    
     st.set_page_config(
         page_title="Upload Documents",
         page_icon="📤",
@@ -42,7 +44,7 @@ def main():
         if uploaded_zip:
             zf = zipfile.ZipFile(uploaded_zip)
             file_contents = nlp.process_zip(zf)
-            db.save_documents(file_contents)
+            db.save_documents(file_contents, current_batch_number)
             if analyze_button("analyze_button_tab1"):
                 pass
             else:
@@ -67,13 +69,13 @@ def main():
         if uploaded_files:
             if analyze_button("analyze_button_tab2"):
                 file_contents = nlp.process_files(uploaded_files)
-                db.save_documents(file_contents)
+                db.save_documents(file_contents, current_batch_number)
             else:
                 st.markdown("_Please upload one or more files for topic analysis._")
 
     # Upload button outside tabs
-    st.button("Upload", key="upload_button")
-
+    if st.button("Upload", key="upload_button"):
+        current_batch_number += 1  # Increment batch number
 
 
 if __name__ == "__main__":

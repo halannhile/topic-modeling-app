@@ -28,7 +28,7 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
-    def get_documents(self, batch_number=None):  # Make batch_number optional
+    def get_documents(self, batch_number=None):
         session = self.Session()
         if batch_number is None:
             documents = session.query(Document).all()
@@ -36,3 +36,9 @@ class DatabaseOperations:
             documents = session.query(Document).filter_by(batch_number=batch_number).all()
         session.close()
         return documents
+
+    def clear_database(self):
+        session = self.Session()
+        session.query(Document).delete()
+        session.commit()
+        session.close()
