@@ -87,11 +87,11 @@ class DatabaseOperations:
                 else:
                     # if the document does not exist for the given upload type, create a new record
                     if isinstance(content, pd.DataFrame):
-                        # convert DataFrame to string and store it as content
                         content_str = content.to_string(index=False)
-                        document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type, topics=topics, probabilities=probabilities)
                     else:
-                        document = Document(filename=filename, batch_number=batch_number, content=content, upload_type=upload_type, topics=topics, probabilities=probabilities)
+                        content_str = content
+
+                    document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type, topics=topics, probabilities=probabilities)
                     session.add(document)
             session.commit()
             session.close()
@@ -101,13 +101,18 @@ class DatabaseOperations:
             session.close()
             print(f"Error saving documents: {e}")
 
-
     def get_documents(self, batch_number=None):
         session = self.Session()
         if batch_number is None:
             documents = session.query(Document).all()
         else:
             documents = session.query(Document).filter_by(batch_number=batch_number).all()
+        session.close()
+        return documents
+
+    def get_all_documents(self):
+        session = self.Session()
+        documents = session.query(Document.filename, Document.content, Document.topics, Document.probabilities).all()
         session.close()
         return documents
 

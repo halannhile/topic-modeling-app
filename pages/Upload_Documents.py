@@ -72,34 +72,28 @@ def main():
 
         st.divider()
         if uploaded_files:
-            topics = []
-            probabilities = []
-            # if st.button("Upload Files", key="upload_button_2"): 
-                
             if st.button("Analyze Topics", key="analyze_topics_2"):
                 print("Analyze Topics button clicked")
                 print("Upload Files button clicked")
                 current_batch_number = db.get_latest_batch_number() + 1
                 file_contents = nlp.process_files(uploaded_files, upload_type='documents')
-                print("file_contents:", file_contents)  # Print file_contents to the console
-                # db.save_documents(file_contents, current_batch_number, upload_type='documents', topics=topics, probabilities=probabilities)
+                print("file_contents:", file_contents)  # print file_contents to the console
 
                 for filename, content in file_contents.items():
-                    # Assuming content is the text content of the file
                     print("filename: ", filename)
                     print("content: ", content)
-                    topic, prob = topic_model.transform(content)
-                    topics.append(topic)
-                    probabilities.append(prob)
-                    print("topics: ", topics)
-                    print("probabilities: ", probabilities)
-                    # Assuming db.save_documents is correctly implemented
-                    db.save_documents({filename: content}, current_batch_number, upload_type='documents', topics=[topic], probabilities=[prob])
+                    topic, prob = topic_model.transform(str(content))
+                    print("topic, prob: ", [topic, prob])
+                    topic_label = topic_model.topic_labels_[topic[0]]
+                    probabilities_str = str(prob)
+
+                    db.save_documents({filename: content}, current_batch_number, upload_type='documents', topics=topic_label, probabilities=probabilities_str)
                     
                 st.success("Topic modeling completed. Results saved to database.")
 
         else:
             st.markdown("_Please upload one or more files for topic analysis._")
+
 
 if __name__ == "__main__":
     main()

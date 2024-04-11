@@ -14,5 +14,5 @@ class Document(Base):
     upload_time = Column(DateTime(timezone=True), default=func.now())
     content = Column(Text) 
     upload_type = Column(String)  # distinguish between 'dataset' upload and 'documents' upload
-    topic = Column(String)  # store topics detected
-    probability = Column(Float)  # store corresponding probabilities
+    topics = Column(String)  # store topics detected
+    probabilities = Column(String)  # store corresponding probabilities
