@@ -4,34 +4,33 @@ import tempfile
 from zipfile import ZipFile
 import pandas as pd
 import textract
+import docx
 
 SUPPORTED_INPUT_FORMATS = ["csv", "txt", "pdf", "docx"]
 
-def process_files(uploaded_files: list[UploadedFile]):
+
+def process_files(uploaded_files: list[UploadedFile], upload_type: str):
     if not uploaded_files:
         raise ValueError("No files uploaded for processing")
 
     file_contents = {}
 
-    for file in uploaded_files:
-        file_extension = file.name.split(".")[-1].lower()
+    for uploaded_file in uploaded_files:
+        file_extension = uploaded_file.name.split(".")[-1].lower()
         if file_extension not in SUPPORTED_INPUT_FORMATS:
             raise ValueError(f"Unsupported file format: {file_extension}")
 
         if file_extension == "txt":
-            text = file.read().decode("utf-8")
-            file_contents[file.name] = text
+            text = uploaded_file.read().decode("utf-8")
+            file_contents[uploaded_file.name] = text
         elif file_extension == "csv":
-            dataframe = pd.read_csv(file)
-            # Concatenate all columns' values to create the text content
-            text = ' '.join(dataframe.apply(lambda x: ' '.join(x.astype(str)), axis=1))
-            file_contents[file.name] = text
-        elif file_extension == "pdf":
-            text = textract.process(file.getvalue()).decode("utf-8")
-            file_contents[file.name] = text
+            dataframe = pd.read_csv(uploaded_file)
+            file_contents[uploaded_file.name] = dataframe
         elif file_extension == "docx":
-            text = textract.process(file.getvalue()).decode("utf-8")
-            file_contents[file.name] = text
+            doc = docx.Document(uploaded_file)
+            text = "\n".join([para.text for para in doc.paragraphs])
+            file_contents[uploaded_file.name] = text
+        # TODO: parse pdf
 
     return file_contents
 

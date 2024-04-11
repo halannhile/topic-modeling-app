@@ -68,20 +68,18 @@ def main():
 
         st.divider()
         if uploaded_files:
-            # st.write("Uploaded Files:")
-            # for uploaded_file in uploaded_files:
-            #     st.write(uploaded_file.name)
 
             if st.button("Upload Files", key="upload_button_2"):
                 current_batch_number = db.get_latest_batch_number() + 1
-                file_contents = nlp.process_files(uploaded_files)
+                file_contents = nlp.process_files(uploaded_files, upload_type='documents')
                 db.save_documents(file_contents, current_batch_number, upload_type='documents')
                 if st.button("Analyze Topics"):
-                    # Hide the uploaded files section and the Upload Files button
+                    # hide the uploaded files section and the Upload Files button
                     st.text("Analyzing topics...")
 
         else:
             st.markdown("_Please upload one or more files for topic analysis._")
+
 
 if __name__ == "__main__":
     main()
