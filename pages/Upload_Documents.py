@@ -23,6 +23,7 @@ def main():
 
     tab1, tab2 = st.tabs(["Upload Dataset", "Upload Document"])
 
+
     with tab1:
         st.title("Upload Dataset for Topic Analysis")
 
@@ -35,14 +36,24 @@ def main():
         )
         st.divider()
         if uploaded_zip:
-            zf = zipfile.ZipFile(uploaded_zip)
-            file_contents = nlp.process_zip(zf)
-            current_batch_number = db.get_latest_batch_number() + 1
-            db.save_documents(file_contents, current_batch_number)
-            if st.button("Analyze Topics"):
-                pass
-            else:
-                st.markdown("_Please upload one or more files for topic analysis._")
+            with zipfile.ZipFile(uploaded_zip, "r") as zf:
+                file_names = zf.namelist()
+                st.write("Uploaded files:")
+                for file_name in file_names:
+                    st.write(file_name)
+
+            if st.button("Upload Dataset", key="upload_button_1"):
+                with zipfile.ZipFile(uploaded_zip, "r") as zf:
+                    file_contents = nlp.process_zip(zf)
+                    current_batch_number = db.get_latest_batch_number() + 1
+                    db.save_documents(file_contents, current_batch_number)
+                if st.button("Analyze Topics"):
+                    # hide the uploaded files section and the Upload Dataset button
+                    st.text("Analyzing topics...")
+
+        else:
+            st.markdown("_Please upload one or more files for topic analysis._")
+
 
     with tab2:
         st.title("Upload Documents for Topic Analysis")
@@ -55,22 +66,22 @@ def main():
             key="document",
         )
 
+        st.divider()
         if uploaded_files:
-            st.write("Uploaded Files:")
-            for uploaded_file in uploaded_files:
-                st.write(uploaded_file.name)
+            # st.write("Uploaded Files:")
+            # for uploaded_file in uploaded_files:
+            #     st.write(uploaded_file.name)
 
-        # TODO: individual file uploads are not saved to db 
-        if uploaded_files:
-            current_batch_number = db.get_latest_batch_number() + 1
-            if st.button("Analyze Topics"):
+            if st.button("Upload Files", key="upload_button_2"):
+                current_batch_number = db.get_latest_batch_number() + 1
                 file_contents = nlp.process_files(uploaded_files)
                 db.save_documents(file_contents, current_batch_number)
-            else:
-                st.markdown("_Please upload one or more files for topic analysis._")
+                if st.button("Analyze Topics"):
+                    # Hide the uploaded files section and the Upload Files button
+                    st.text("Analyzing topics...")
 
-    if st.button("Upload", key="upload_button"):
-        pass 
+        else:
+            st.markdown("_Please upload one or more files for topic analysis._")
 
 if __name__ == "__main__":
     main()

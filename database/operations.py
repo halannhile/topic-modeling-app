@@ -13,7 +13,7 @@ class DatabaseOperations:
 
     ################# SAVE INDIVIDUAL DOCUMENTS FOR TAB 2 #################
 
-    # save a single document
+    # TODO: save a single document: maybe don't need this
     def save_document(self, filename, batch_number):
         session = self.Session()
         document = Document(filename=filename, batch_number=batch_number)
@@ -21,7 +21,7 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
-    ################# SAVE DOCUMENTS (DATSET) FOR TAB 1 #################
+    ################# SAVE ZIP FOLDER (DATASET) FOR TAB 1 #################
 
     # IMPLEMENTATION 1: do not reupload files that are already in the database
     '''
