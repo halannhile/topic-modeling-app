@@ -124,6 +124,24 @@ class DatabaseOperations:
         Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
+    
+    def delete_document(self, document_id):
+        session = self.Session()
+        try:
+            # Get the document by its ID
+            document = session.query(Document).filter_by(id=document_id).first()
+            if document:
+                # Delete the document
+                session.delete(document)
+                session.commit()
+                print(f"Document with ID {document_id} deleted successfully.")
+            else:
+                print(f"No document found with ID {document_id}.")
+        except Exception as e:
+            session.rollback()
+            print(f"Error deleting document with ID {document_id}: {e}")
+        finally:
+            session.close()
 
     def get_latest_batch_number(self):
         session = self.Session()
