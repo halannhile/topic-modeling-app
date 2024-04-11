@@ -72,8 +72,8 @@ class DatabaseOperations:
     def save_documents(self, file_contents, batch_number, upload_type):
         session = self.Session()
         for filename, content in file_contents.items():
-            # check if the document already exists in the database
-            existing_document = session.query(Document).filter_by(filename=filename).first()
+            # check if the document already exists in the database for the given upload type
+            existing_document = session.query(Document).filter_by(filename=filename, upload_type=upload_type).first()
             if existing_document:
                 batch_number -= 1
                 if isinstance(content, pd.DataFrame):
@@ -83,7 +83,7 @@ class DatabaseOperations:
                 else:
                     existing_document.content = content
             else:
-                # if the document does not exist, create a new record
+                # if the document does not exist for the given upload type, create a new record
                 if isinstance(content, pd.DataFrame):
                     # convert DataFrame to string and store it as content
                     content_str = content.to_string(index=False)
@@ -93,6 +93,7 @@ class DatabaseOperations:
                 session.add(document)
         session.commit()
         session.close()
+
 
     def get_documents(self, batch_number=None):
         session = self.Session()
