@@ -62,6 +62,13 @@ def main():
     with tab2:
         st.title("Upload Documents for Topic Analysis")
 
+        # for user to paste input text
+        input_text = st.text_area("Paste input text here:", height=200)
+
+        # for user to enter file name
+        file_name = st.text_input("Enter file name (optional):")
+
+        # for uploading files
         uploaded_files = st.file_uploader(
             "Upload files for topic modeling",
             type=nlp.SUPPORTED_INPUT_FORMATS,
@@ -71,17 +78,25 @@ def main():
         )
 
         st.divider()
-        if uploaded_files:
+
+        if uploaded_files or input_text:
             if st.button("Analyze Topics", key="analyze_topics_2"):
                 print("Analyze Topics button clicked")
-                print("Upload Files button clicked")
-                current_batch_number = db.get_latest_batch_number() + 1
-                file_contents = nlp.process_files(uploaded_files, upload_type='documents')
-                print("file_contents:", file_contents)  # print file_contents to the console
 
+                # determine batch number
+                current_batch_number = db.get_latest_batch_number() + 1
+
+                # process input text and uploaded files
+                if input_text:
+                    file_contents = {file_name or "input_text": input_text}
+                else:
+                    file_contents = nlp.process_files(uploaded_files, upload_type='documents')
+
+                # perform topic modeling and save results to the database
                 for filename, content in file_contents.items():
                     print("filename: ", filename)
                     print("content: ", content)
+
                     topic, prob = topic_model.transform(str(content))
                     print("topic, prob: ", [topic, prob])
                     topic_label = topic_model.topic_labels_[topic[0]]
@@ -92,7 +107,8 @@ def main():
                 st.success("Topic modeling completed. Results saved to database.")
 
         else:
-            st.markdown("_Please upload one or more files for topic analysis._")
+            st.markdown("_Please upload one or more files or paste input text for topic analysis._")
+
 
 
 if __name__ == "__main__":
