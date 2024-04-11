@@ -1,63 +1,76 @@
-from pathlib import Path
-from streamlit.runtime.uploaded_file_manager import UploadedFile
+from io import BytesIO
+import os
 import tempfile
+from typing import Sequence
 from zipfile import ZipFile
-import pandas as pd
-import textract
 import docx
 
-SUPPORTED_INPUT_FORMATS = ["csv", "txt", "pdf", "docx"]
+SUPPORTED_INPUT_FORMATS = ["txt", "docx"]
 
 
-def process_files(uploaded_files: list[UploadedFile], upload_type: str):
+class UploadedDocument:
+    def __init__(self, content: str, filename: str):
+        self.content = content
+        self.filename = filename
+
+    @staticmethod
+    def from_txt(uploaded_file: BytesIO) -> "UploadedDocument":
+        print("uploaded_file: ", uploaded_file)
+        content = uploaded_file.getvalue().decode("utf-8")
+        print("content: ", content)
+        return UploadedDocument(content, uploaded_file.name)
+
+    @staticmethod
+    def from_docx(uploaded_file: BytesIO) -> "UploadedDocument":
+        doc = docx.Document(uploaded_file)
+        text = "\n".join([para.text for para in doc.paragraphs])
+        return UploadedDocument(text, uploaded_file.name)
+
+    @staticmethod
+    def from_file(bio: BytesIO) -> "UploadedDocument":
+        _, ext = os.path.splitext(bio.name)
+        if ext == ".txt":
+            return UploadedDocument.from_txt(bio)
+        elif ext == ".docx":
+            return UploadedDocument.from_docx(bio)
+        else:
+            raise ValueError(f"Unsupported file format: {ext}")
+
+
+def process_files(uploaded_files: Sequence[BytesIO]) -> list[UploadedDocument]:
+    """Convert a list of uploaded files to a list of UploadedDocument objects.
+    This function assumes that all of the uploaded files have the BytesIO.name attribute set to the filename.
+    """
     if not uploaded_files:
         raise ValueError("No files uploaded for processing")
 
-    file_contents = {}
+    return [
+        UploadedDocument.from_file(uploaded_file) for uploaded_file in uploaded_files
+    ]
 
-    for uploaded_file in uploaded_files:
-        file_extension = uploaded_file.name.split(".")[-1].lower()
-        if file_extension not in SUPPORTED_INPUT_FORMATS:
-            raise ValueError(f"Unsupported file format: {file_extension}")
 
-        if file_extension == "txt":
-            text = uploaded_file.read().decode("utf-8")
-            file_contents[uploaded_file.name] = text
-        elif file_extension == "csv":
-            dataframe = pd.read_csv(uploaded_file)
-            file_contents[uploaded_file.name] = dataframe
-        elif file_extension == "docx":
-            doc = docx.Document(uploaded_file)
-            text = "\n".join([para.text for para in doc.paragraphs])
-            file_contents[uploaded_file.name] = text
-        # TODO: parse pdf
-
-    return file_contents
-
-def process_zip(uploaded_zip: ZipFile):
+def process_zip(uploaded_zip: ZipFile) -> list[UploadedDocument]:
+    """Extract the contents of a zipfile and process the files inside it."""
     if not uploaded_zip:
         raise ValueError("No zipfile uploaded for processing")
 
-    file_contents = {}
-
     with tempfile.TemporaryDirectory() as temp_dir:
         uploaded_zip.extractall(temp_dir)
-        for filename in Path(temp_dir).rglob("*.*"):
-            file_extension = filename.suffix.lower()[1:]  # Remove leading dot
-            if file_extension in SUPPORTED_INPUT_FORMATS:
-                if file_extension == "txt":
-                    with open(filename, "r", encoding="utf-8") as file:
-                        file_contents[filename.name] = file.read()
-                elif file_extension == "csv":
-                    dataframe = pd.read_csv(filename)
-                    file_contents[filename.name] = dataframe
-                # TODO: reimplement PDF processing
-                # elif file_extension == "pdf":
-                #     text = textract.process(str(filename)).decode("utf-8")
-                #     file_contents[filename.name] = text
-                elif file_extension == "docx":
-                    text = textract.process(str(filename)).decode("utf-8")
-                    file_contents[filename.name] = text
+        extracted_files = []
+        for path, dirs, files in os.walk(temp_dir):
+            extracted_files.extend(files)
+            # TODO - break here to only get the files in the root directory.
+            # TODO - should we also process files in subdirectories?
+            break
 
+        # list of BytesIO objects for each extracted file
+        bios: list[BytesIO] = []
+        for extracted_file in extracted_files:
+            with open(os.path.join(temp_dir, extracted_file), "rb") as f:
+                bios.append(BytesIO(f.read()))
+                # set the name attribute of the BytesIO object to the extracted file name.
+                # this is used by the UploadedDocument.from_file method to determine the file type
+                bios[-1].name = extracted_file
 
-    return file_contents
+        file_contents = process_files(bios)
+        return file_contents
