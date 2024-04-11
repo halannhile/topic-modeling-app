@@ -1,8 +1,12 @@
+from typing import Literal
 import pandas as pd
+
+from nlp import UploadedDocument
 from .models import Base, Document
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
+
 
 class DatabaseOperations:
     def __init__(self, db_uri):
@@ -11,20 +15,22 @@ class DatabaseOperations:
         # create tables
         Base.metadata.create_all(self.engine)
 
-    ################# SAVE INDIVIDUAL DOCUMENTS FOR TAB 2 #################
+    ################# SAVE INDIVIDUAL DOCUMENTS FOR TAB 1 #################
 
     # TODO: save a single document: maybe don't need this
     def save_document(self, filename, batch_number, upload_type):
         session = self.Session()
-        document = Document(filename=filename, batch_number=batch_number, upload_type=upload_type)
+        document = Document(
+            filename=filename, batch_number=batch_number, upload_type=upload_type
+        )
         session.add(document)
         session.commit()
         session.close()
 
-    ################# SAVE ZIP FOLDER (DATASET) FOR TAB 1 #################
+    ################# SAVE MULTIPLE DOCUMENTS FOR TAB 2 #################
 
     # IMPLEMENTATION 1: do not reupload files that are already in the database
-    '''
+    """
     # save multiple documents
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
@@ -49,10 +55,10 @@ class DatabaseOperations:
             session.rollback()
         finally:
             session.close()
-    '''
+    """
 
     # IMPLEMENTATION 2: upload duplicate files as long as they are in a new batch
-    '''
+    """
     def save_documents(self, file_contents, batch_number):
         session = self.Session()
         for filename, content in file_contents.items():
@@ -67,31 +73,38 @@ class DatabaseOperations:
                 session.add(document)
         session.commit()
         session.close()
-    '''
+    """
 
-    def save_documents(self, file_contents, batch_number, upload_type, topics, probabilities):
-        print("file_contents, batch_number, upload_type, topics, probabilities: ", [file_contents, batch_number, upload_type, topics, probabilities])
+    def save_batch_to_db(
+        self,
+        docs: list[UploadedDocument],
+        upload_type: Literal["documents", "dataset"],
+        topics,
+        probabilities,
+    ):
         session = self.Session()
+        batch_number = self.get_latest_batch_number() + 1
         try:
-            for filename, content in file_contents.items():
+            for doc in docs:
                 # check if the document already exists in the database for the given upload type
-                existing_document = session.query(Document).filter_by(filename=filename, upload_type=upload_type).first()
+                existing_document = (
+                    session.query(Document)
+                    .filter_by(filename=doc.filename, upload_type=upload_type)
+                    .first()
+                )
                 if existing_document:
-                    batch_number -= 1
-                    if isinstance(content, pd.DataFrame):
-                        # convert DataFrame to string and update the content
-                        content_str = content.to_string(index=False)
-                        existing_document.content = content_str
-                    else:
-                        existing_document.content = content
+                    existing_document.content = doc.content
                 else:
                     # if the document does not exist for the given upload type, create a new record
-                    if isinstance(content, pd.DataFrame):
-                        content_str = content.to_string(index=False)
-                    else:
-                        content_str = content
-
-                    document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type, topics=topics, probabilities=probabilities)
+                    content_str = doc.content
+                    document = Document(
+                        filename=doc.filename,
+                        batch_number=batch_number,
+                        content=content_str,
+                        upload_type=upload_type,
+                        topics=topics,
+                        probabilities=probabilities,
+                    )
                     session.add(document)
             session.commit()
             session.close()
@@ -106,13 +119,17 @@ class DatabaseOperations:
         if batch_number is None:
             documents = session.query(Document).all()
         else:
-            documents = session.query(Document).filter_by(batch_number=batch_number).all()
+            documents = (
+                session.query(Document).filter_by(batch_number=batch_number).all()
+            )
         session.close()
         return documents
 
     def get_all_documents(self):
         session = self.Session()
-        documents = session.query(Document.filename, Document.content, Document.topics, Document.probabilities).all()
+        documents = session.query(
+            Document.filename, Document.content, Document.topics, Document.probabilities
+        ).all()
         session.close()
         return documents
 
@@ -125,11 +142,14 @@ class DatabaseOperations:
         session.commit()
         session.close()
 
-    def get_latest_batch_number(self):
+    def get_latest_batch_number(self) -> int:
         session = self.Session()
-        latest_batch = session.query(Document).order_by(Document.batch_number.desc()).first()
+        latest_batch = (
+            session.query(Document).order_by(Document.batch_number.desc()).first()
+        )
         session.close()
         if latest_batch:
-            return latest_batch.batch_number
+            # return the batch number of the latest batch
+            return latest_batch.batch_number  # type: ignore
         else:
             return 0  # return 0 if no batches exist
