@@ -69,30 +69,37 @@ class DatabaseOperations:
         session.close()
     '''
 
-    def save_documents(self, file_contents, batch_number, upload_type):
+    def save_documents(self, file_contents, batch_number, upload_type, topics, probabilities):
+        print("file_contents, batch_number, upload_type, topics, probabilities: ", [file_contents, batch_number, upload_type, topics, probabilities])
         session = self.Session()
-        for filename, content in file_contents.items():
-            # check if the document already exists in the database for the given upload type
-            existing_document = session.query(Document).filter_by(filename=filename, upload_type=upload_type).first()
-            if existing_document:
-                batch_number -= 1
-                if isinstance(content, pd.DataFrame):
-                    # convert DataFrame to string and update the content
-                    content_str = content.to_string(index=False)
-                    existing_document.content = content_str
+        try:
+            for filename, content in file_contents.items():
+                # check if the document already exists in the database for the given upload type
+                existing_document = session.query(Document).filter_by(filename=filename, upload_type=upload_type).first()
+                if existing_document:
+                    batch_number -= 1
+                    if isinstance(content, pd.DataFrame):
+                        # convert DataFrame to string and update the content
+                        content_str = content.to_string(index=False)
+                        existing_document.content = content_str
+                    else:
+                        existing_document.content = content
                 else:
-                    existing_document.content = content
-            else:
-                # if the document does not exist for the given upload type, create a new record
-                if isinstance(content, pd.DataFrame):
-                    # convert DataFrame to string and store it as content
-                    content_str = content.to_string(index=False)
-                    document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type)
-                else:
-                    document = Document(filename=filename, batch_number=batch_number, content=content, upload_type=upload_type)
-                session.add(document)
-        session.commit()
-        session.close()
+                    # if the document does not exist for the given upload type, create a new record
+                    if isinstance(content, pd.DataFrame):
+                        # convert DataFrame to string and store it as content
+                        content_str = content.to_string(index=False)
+                        document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type, topics=topics, probabilities=probabilities)
+                    else:
+                        document = Document(filename=filename, batch_number=batch_number, content=content, upload_type=upload_type, topics=topics, probabilities=probabilities)
+                    session.add(document)
+            session.commit()
+            session.close()
+            print("Documents saved successfully.")
+        except Exception as e:
+            session.rollback()
+            session.close()
+            print(f"Error saving documents: {e}")
 
 
     def get_documents(self, batch_number=None):

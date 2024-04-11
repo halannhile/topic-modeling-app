@@ -10,9 +10,9 @@ def display_documents():
         st.write("Uploaded Documents:")
         data = []
         for document in documents:
-            data.append([document.batch_number, document.filename, document.upload_time, document.upload_type, document.content])
+            data.append([document.batch_number, document.filename, document.upload_time, document.upload_type, document.content, document.topic, document.probability])
 
-        data_with_header = [["Batch Number", "File Name", "Time Uploaded", "Upload Type", "File Content"]] + data
+        data_with_header = [["Batch Number", "File Name", "Time Uploaded", "Upload Type", "File Content", "Topics", "Probabilities"]] + data
 
         st.table(data_with_header)
     else:
@@ -21,6 +21,7 @@ def display_documents():
     if st.button("Clear Database"):
         db.clear_database()
         st.write("Database cleared successfully.")
+
 
 
 def main():

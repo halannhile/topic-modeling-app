@@ -2,8 +2,12 @@ import streamlit as st
 from database import init_db
 import zipfile
 import nlp  # process_zip, SUPPORTED_INPUT_FORMATS, process_files
+from bertopic import BERTopic
 
-db = init_db('sqlite:///appdatabase2.db')
+db = init_db('sqlite:///db1.db')
+
+# this part makes it take some time to launch the Upload Documents page
+topic_model = BERTopic.load("MaartenGr/BERTopic_Wikipedia")
 
 def analyze_button():
     with st.columns(3)[1]:
@@ -68,18 +72,34 @@ def main():
 
         st.divider()
         if uploaded_files:
-
-            if st.button("Upload Files", key="upload_button_2"):
+            topics = []
+            probabilities = []
+            # if st.button("Upload Files", key="upload_button_2"): 
+                
+            if st.button("Analyze Topics", key="analyze_topics_2"):
+                print("Analyze Topics button clicked")
+                print("Upload Files button clicked")
                 current_batch_number = db.get_latest_batch_number() + 1
                 file_contents = nlp.process_files(uploaded_files, upload_type='documents')
-                db.save_documents(file_contents, current_batch_number, upload_type='documents')
-                if st.button("Analyze Topics"):
-                    # hide the uploaded files section and the Upload Files button
-                    st.text("Analyzing topics...")
+                print("file_contents:", file_contents)  # Print file_contents to the console
+                # db.save_documents(file_contents, current_batch_number, upload_type='documents', topics=topics, probabilities=probabilities)
+
+                for filename, content in file_contents.items():
+                    # Assuming content is the text content of the file
+                    print("filename: ", filename)
+                    print("content: ", content)
+                    topic, prob = topic_model.transform(content)
+                    topics.append(topic)
+                    probabilities.append(prob)
+                    print("topics: ", topics)
+                    print("probabilities: ", probabilities)
+                    # Assuming db.save_documents is correctly implemented
+                    db.save_documents({filename: content}, current_batch_number, upload_type='documents', topics=[topic], probabilities=[prob])
+                    
+                st.success("Topic modeling completed. Results saved to database.")
 
         else:
             st.markdown("_Please upload one or more files for topic analysis._")
-
 
 if __name__ == "__main__":
     main()

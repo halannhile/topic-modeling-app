@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from sqlalchemy import Text
+from sqlalchemy import Text, Float
 
 Base = declarative_base()
 
@@ -14,3 +14,5 @@ class Document(Base):
     upload_time = Column(DateTime(timezone=True), default=func.now())
     content = Column(Text) 
     upload_type = Column(String)  # distinguish between 'dataset' upload and 'documents' upload
+    topic = Column(String)  # store topics detected
+    probability = Column(Float)  # store corresponding probabilities
