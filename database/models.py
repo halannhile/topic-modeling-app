@@ -13,3 +13,4 @@ class Document(Base):
     batch_number = Column(Integer)
     upload_time = Column(DateTime(timezone=True), default=func.now())
     content = Column(Text) 
+    upload_type = Column(String)  # distinguish between 'dataset' upload and 'documents' upload

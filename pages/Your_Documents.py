@@ -3,21 +3,16 @@ from database import init_db
 
 def display_documents():
     st.title("Your Documents")
-    db = init_db("sqlite:///app-database.db")
+    db = init_db("sqlite:///appdatabase2.db")
     documents = db.get_documents()  # no batch_number provided
 
     if documents:
         st.write("Uploaded Documents:")
         data = []
         for document in documents:
-            # extract content from DataFrame (for csv files)
-            content = document.content
-            if hasattr(content, 'values'):
-                content = content.values[0][0]  # TODO: debug this: assuming content is stored in the first cell
-            data.append([document.batch_number, document.filename, document.upload_time, content])
+            data.append([document.batch_number, document.filename, document.upload_time, document.upload_type, document.content])
 
-        # TODO: figure out way to display headers instead of this method: specify column names as first row of data
-        data_with_header = [["Batch Number", "File Name", "Time Uploaded", "File Content"]] + data
+        data_with_header = [["Batch Number", "File Name", "Time Uploaded", "Upload Type", "File Content"]] + data
 
         st.table(data_with_header)
     else:
@@ -26,6 +21,7 @@ def display_documents():
     if st.button("Clear Database"):
         db.clear_database()
         st.write("Database cleared successfully.")
+
 
 def main():
     st.set_page_config(

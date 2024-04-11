@@ -3,7 +3,7 @@ from database import init_db
 import zipfile
 import nlp  # process_zip, SUPPORTED_INPUT_FORMATS, process_files
 
-db = init_db('sqlite:///app-database.db')
+db = init_db('sqlite:///appdatabase2.db')
 
 def analyze_button():
     with st.columns(3)[1]:
@@ -46,7 +46,7 @@ def main():
                 with zipfile.ZipFile(uploaded_zip, "r") as zf:
                     file_contents = nlp.process_zip(zf)
                     current_batch_number = db.get_latest_batch_number() + 1
-                    db.save_documents(file_contents, current_batch_number)
+                    db.save_documents(file_contents, current_batch_number, upload_type='dataset')
                 if st.button("Analyze Topics"):
                     # hide the uploaded files section and the Upload Dataset button
                     st.text("Analyzing topics...")
@@ -75,7 +75,7 @@ def main():
             if st.button("Upload Files", key="upload_button_2"):
                 current_batch_number = db.get_latest_batch_number() + 1
                 file_contents = nlp.process_files(uploaded_files)
-                db.save_documents(file_contents, current_batch_number)
+                db.save_documents(file_contents, current_batch_number, upload_type='documents')
                 if st.button("Analyze Topics"):
                     # Hide the uploaded files section and the Upload Files button
                     st.text("Analyzing topics...")

@@ -14,9 +14,9 @@ class DatabaseOperations:
     ################# SAVE INDIVIDUAL DOCUMENTS FOR TAB 2 #################
 
     # TODO: save a single document: maybe don't need this
-    def save_document(self, filename, batch_number):
+    def save_document(self, filename, batch_number, upload_type):
         session = self.Session()
-        document = Document(filename=filename, batch_number=batch_number)
+        document = Document(filename=filename, batch_number=batch_number, upload_type=upload_type)
         session.add(document)
         session.commit()
         session.close()
@@ -69,7 +69,7 @@ class DatabaseOperations:
         session.close()
     '''
 
-    def save_documents(self, file_contents, batch_number):
+    def save_documents(self, file_contents, batch_number, upload_type):
         session = self.Session()
         for filename, content in file_contents.items():
             # check if the document already exists in the database
@@ -87,13 +87,12 @@ class DatabaseOperations:
                 if isinstance(content, pd.DataFrame):
                     # convert DataFrame to string and store it as content
                     content_str = content.to_string(index=False)
-                    document = Document(filename=filename, batch_number=batch_number, content=content_str)
+                    document = Document(filename=filename, batch_number=batch_number, content=content_str, upload_type=upload_type)
                 else:
-                    document = Document(filename=filename, batch_number=batch_number, content=content)
+                    document = Document(filename=filename, batch_number=batch_number, content=content, upload_type=upload_type)
                 session.add(document)
         session.commit()
         session.close()
-
 
     def get_documents(self, batch_number=None):
         session = self.Session()
@@ -106,9 +105,9 @@ class DatabaseOperations:
 
     def clear_database(self):
         session = self.Session()
-        # drop existing table
+        # Drop existing table
         Document.__table__.drop(self.engine)
-        # recreate the table with the updated schema
+        # Recreate the table with the updated schema
         Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
