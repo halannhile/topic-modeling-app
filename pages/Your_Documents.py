@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 from database import init_db
 
@@ -10,12 +11,12 @@ def display_documents():
         st.write("Uploaded Documents:")
         data = []
         for document in documents:
-
             data.append([document.batch_number, document.filename, document.upload_time, document.upload_type, document.content, document.topics, document.probabilities])
 
-        data_with_header = [["Batch Number", "File Name", "Time Uploaded", "Upload Type", "File Content", "Topics", "Probability"]] + data
+        df = pd.DataFrame(data, columns=["Batch Number", "File Name", "Time Uploaded", "Upload Type", "File Content", "Topics", "Probability"])
 
-        st.table(data_with_header)
+        # display the DataFrame in a table
+        st.table(df)
     else:
         st.write("No documents uploaded yet.")
 
