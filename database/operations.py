@@ -106,9 +106,9 @@ class DatabaseOperations:
 
     def clear_database(self):
         session = self.Session()
-        # Drop existing table
+        # drop existing table
         Document.__table__.drop(self.engine)
-        # Recreate the table with the updated schema
+        # recreate the table with the updated schema
         Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
