@@ -16,9 +16,9 @@ class UploadedDocument:
 
     @staticmethod
     def from_txt(uploaded_file: BytesIO) -> "UploadedDocument":
-        print("uploaded_file: ", uploaded_file)
+        # print("uploaded_file: ", uploaded_file)
         content = uploaded_file.getvalue().decode("utf-8")
-        print("content: ", content)
+        # print("content: ", content)
         return UploadedDocument(content, uploaded_file.name)
 
     @staticmethod
@@ -72,4 +72,6 @@ def process_zip(uploaded_zip: ZipFile) -> list[UploadedDocument]:
                 bios[-1].name = extracted_file
 
         file_contents = process_files(bios)
+        for file in file_contents:
+            file.filename = str(file.filename)
         return file_contents

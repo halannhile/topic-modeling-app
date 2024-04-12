@@ -87,16 +87,21 @@ def main():
                 st.write("Uploaded files:")
                 for doc in docs:
                     st.write(doc.filename)
+                    topic, prob, label = transform_doc_pretrained(doc)
+                    db.save_batch_to_db(
+                        [doc],
+                        upload_type="documents",
+                        topics=label,
+                        probabilities=str(prob),
+                    )
 
-                if st.button("Upload Dataset", key="upload_button_1"):
-
-                    if st.button(
-                        "Train Topic Model", disabled=True, help="Not yet implemented"
-                    ):
-                        # TODO - implement model training
-                        # train model first, then analyze topics and save docs to database
-                        # don't forget to increment batch number!
-                        pass
+                if st.button(
+                    "Train Topic Model", disabled=True, help="Not yet implemented"
+                ):
+                    # TODO - implement model training
+                    # train model first, then analyze topics and save docs to database
+                    # don't forget to increment batch number!
+                    pass
 
         else:
             st.markdown(
