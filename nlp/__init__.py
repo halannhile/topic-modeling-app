@@ -3,6 +3,7 @@ import os
 import tempfile
 from typing import Sequence
 from zipfile import ZipFile
+from pathlib import Path
 import docx
 
 SUPPORTED_INPUT_FORMATS = ["txt", "docx"]
@@ -57,11 +58,9 @@ def process_zip(uploaded_zip: ZipFile) -> list[UploadedDocument]:
     with tempfile.TemporaryDirectory() as temp_dir:
         uploaded_zip.extractall(temp_dir)
         extracted_files = []
-        for path, dirs, files in os.walk(temp_dir):
-            extracted_files.extend(files)
-            # TODO - break here to only get the files in the root directory.
-            # TODO - should we also process files in subdirectories?
-            break
+
+        for filename in Path(temp_dir).rglob('*.txt'):
+            extracted_files.append(filename)
 
         # list of BytesIO objects for each extracted file
         bios: list[BytesIO] = []
