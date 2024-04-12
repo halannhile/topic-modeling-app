@@ -1,6 +1,6 @@
-import pandas as pd
 import streamlit as st
 from database import init_db
+import pandas as pd
 
 
 def display_documents():
@@ -14,6 +14,7 @@ def display_documents():
         for document in documents:
             data.append(
                 [
+                    document.id,
                     document.batch_number,
                     document.filename,
                     document.upload_time,
@@ -27,6 +28,7 @@ def display_documents():
         df = pd.DataFrame(
             data,
             columns=[
+                "ID",
                 "Batch Number",
                 "File Name",
                 "Time Uploaded",
@@ -37,8 +39,21 @@ def display_documents():
             ],
         )
 
-        # display the DataFrame in a table
+        # Display the DataFrame in a table
         st.table(df)
+
+        # Input box for ID of document to delete
+        delete_id = st.number_input(
+            "Enter the ID of the document you want to delete:", min_value=1, step=1
+        )
+
+        # Delete button
+        if st.button("Delete Document"):
+            if delete_id:
+                db.delete_document(delete_id)
+                st.write(f"Document with ID {delete_id} deleted successfully.")
+            else:
+                st.warning("Please enter a valid ID.")
 
         with st.popover("Clear Database"):
             st.write("Are you sure you want to clear all documents from the database?")
@@ -47,6 +62,9 @@ def display_documents():
                 st.rerun()
     else:
         st.write("No documents uploaded yet.")
+
+    if st.button("Refresh Database"):
+        st.rerun()
 
 
 def main():

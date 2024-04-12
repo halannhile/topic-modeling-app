@@ -29,6 +29,12 @@ def main():
     with docs_tab:
         st.title("Upload Documents for Topic Analysis")
 
+        # for user to paste input text
+        input_text = st.text_area("Paste input text here:", height=200)
+
+        # for user to enter file name
+        file_name = st.text_input("Enter file name:", value="text_input.txt")
+
         uploaded_files = st.file_uploader(
             "Upload files for topic analysis",
             type=nlp.SUPPORTED_INPUT_FORMATS,
@@ -39,11 +45,13 @@ def main():
 
         st.divider()
 
-        if uploaded_files:
-            docs: list[nlp.UploadedDocument] = nlp.process_files(uploaded_files)
-
-            if st.button("Analyze Topics", key="analyze_documents_button"):
-                docs = nlp.process_files(uploaded_files)
+        if st.button("Analyze Topics", key="analyze_documents_button"):
+            if uploaded_files or input_text:
+                docs = []
+                if input_text:
+                    docs = [nlp.UploadedDocument(input_text, file_name)]
+                elif uploaded_files:
+                    docs: list[nlp.UploadedDocument] = nlp.process_files(uploaded_files)
 
                 for doc in docs:
                     topic, prob, label = transform_doc_pretrained(doc)
@@ -90,7 +98,9 @@ def main():
                     pass
 
         else:
-            st.markdown("_Please upload one or more files for topic analysis._")
+            st.markdown(
+                "_Please upload one or more files or paste input text for topic analysis._"
+            )
 
 
 if __name__ == "__main__":
