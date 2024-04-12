@@ -80,23 +80,22 @@ def main():
 
         st.divider()
 
-        if st.button("Upload Documents", key="upload_documents_button"):
-            if uploaded_zip:
-                docs = nlp.process_zip(zipfile.ZipFile(uploaded_zip))
+        if uploaded_zip:
+            docs = nlp.process_zip(zipfile.ZipFile(uploaded_zip))
 
-                st.write("Uploaded files:")
-                for doc in docs:
-                    st.write(doc.filename)
+            st.write("Uploaded files:")
+            for doc in docs:
+                st.write(doc.filename)
 
-                if st.button("Upload Dataset", key="upload_button_1"):
+            if st.button("Upload Dataset", key="upload_button_1"):
 
-                    if st.button(
-                        "Train Topic Model", disabled=True, help="Not yet implemented"
-                    ):
-                        # TODO - implement model training
-                        # train model first, then analyze topics and save docs to database
-                        # don't forget to increment batch number!
-                        pass
+                if st.button(
+                    "Train Topic Model", disabled=True, help="Not yet implemented"
+                ):
+                    # TODO - implement model training
+                    # train model first, then analyze topics and save docs to database
+                    # don't forget to increment batch number!
+                    pass
 
         else:
             st.markdown(
