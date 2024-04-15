@@ -3,7 +3,9 @@ from database import init_db
 import zipfile
 
 from nlp import SUPPORTED_INPUT_FORMATS
+from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
 from nlp.utils import UploadedDocument, process_files, process_zip
+
 
 st.set_page_config(
     page_title="Upload Documents",
@@ -52,8 +54,8 @@ with inference_tab:
             elif uploaded_files:
                 docs: list[UploadedDocument] = process_files(uploaded_files)
 
-            with st.spinner("Loading pretrained model..."):
-                from nlp.topic_modeling import transform_doc_pretrained
+            # preload the model (shows spinner)
+            get_pretrained_model()
 
             pbar = st.progress(0.0)
             for i, doc in enumerate(docs):

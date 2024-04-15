@@ -1,16 +1,15 @@
 import streamlit as st
 
-# slow!!
-from bertopic import BERTopic
-
 from .utils import UploadedDocument
 
 
 @st.cache_resource(show_spinner="Loading pretrained model...")
-def get_pretrained_model(model_path: str = "MaartenGr/BERTopic_Wikipedia") -> BERTopic:
-    print("loading...")
+def get_pretrained_model(model_path: str = "MaartenGr/BERTopic_Wikipedia"):
+    # this import is in here because it's quite slow
+    # so we only want to import it when we need it
+    from bertopic import BERTopic
+
     model = BERTopic.load(model_path)
-    print("done!")
     return model
 
 
