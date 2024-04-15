@@ -1,15 +1,22 @@
+import streamlit as st
+
+# slow!!
 from bertopic import BERTopic
-from numpy import ndarray
 
-from nlp import UploadedDocument
+from .utils import UploadedDocument
 
-# slow on first load
-pretrained_model = BERTopic.load("MaartenGr/BERTopic_Wikipedia")
-topic_labels = pretrained_model.generate_topic_labels()
+
+@st.cache_resource(show_spinner="Loading pretrained model...")
+def get_pretrained_model(model_path: str = "MaartenGr/BERTopic_Wikipedia") -> BERTopic:
+    print("loading...")
+    model = BERTopic.load(model_path)
+    print("done!")
+    return model
 
 
 def transform_doc_pretrained(
     doc: UploadedDocument,
 ) -> tuple[int, float, str]:
+    pretrained_model = get_pretrained_model()
     topic, prob = pretrained_model.transform(doc.content)
     return topic[0], prob.item(), pretrained_model.topic_labels_[topic[0]]  # type: ignore
