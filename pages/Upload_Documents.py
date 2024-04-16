@@ -1,9 +1,14 @@
+import os
 import streamlit as st
 from database import init_db
 import zipfile
 
 from nlp import SUPPORTED_INPUT_FORMATS
-from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
+from nlp.topic_modeling import (
+    get_pretrained_model,
+    transform_doc_pretrained,
+    train_model,
+)
 from nlp.utils import UploadedDocument, process_files, process_zip
 
 
@@ -93,18 +98,25 @@ with training_tab:
         docs = process_zip(zipfile.ZipFile(uploaded_zip))
 
         st.write("Uploaded files:")
-        for doc in docs:
+        for doc in docs[:5]:
             st.write(doc.filename)
+        if len(docs) > 5:
+            st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
 
-        if st.button("Upload Dataset", key="upload_button_1"):
+        default_model_path = os.path.join(os.getcwd(), "trained_model")
+        model_path = st.text_input(
+            "Enter the path to save the trained model:", value=default_model_path
+        )
+        valid_path = os.path.exists(os.path.dirname(model_path))
 
-            if st.button(
-                "Train Topic Model", disabled=True, help="Not yet implemented"
-            ):
-                # TODO - implement model training
-                # train model first, then analyze topics and save docs to database
-                # don't forget to increment batch number!
-                pass
+        if st.button(
+            "Train Topic Model",
+            disabled=not valid_path,
+            help="Begin training the model",
+        ):
+            with st.spinner("Training model (this may take a while)..."):
+                train_model(docs, model_path)
+            st.success(f"Topic modeling completed. Model saved to {model_path}.")
 
     else:
         st.markdown(
