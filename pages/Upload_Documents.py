@@ -82,17 +82,23 @@ def main():
 
         if st.button("Upload Documents", key="upload_documents_button"):
             if uploaded_zip:
+                # Increment batch number
+                current_batch_number = db.get_latest_batch_number() + 1
+                
+                # Process uploaded zip file
                 docs = nlp.process_zip(zipfile.ZipFile(uploaded_zip))
-
                 st.write("Uploaded files:")
+                
+                # Save each document to the database with the same batch number and upload type
                 for doc in docs:
                     st.write(doc.filename)
                     topic, prob, label = transform_doc_pretrained(doc)
                     db.save_batch_to_db(
                         [doc],
-                        upload_type="documents",
+                        upload_type="dataset",  # Set upload type to "dataset"
                         topics=label,
                         probabilities=str(prob),
+                        batch_number=current_batch_number  # Set the batch number for all documents
                     )
 
                 if st.button(
@@ -107,7 +113,6 @@ def main():
             st.markdown(
                 "_Please upload one or more files or paste input text for topic analysis._"
             )
-
 
 if __name__ == "__main__":
     main()

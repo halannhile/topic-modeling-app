@@ -50,28 +50,20 @@ def process_files(uploaded_files: Sequence[BytesIO]) -> list[UploadedDocument]:
     ]
 
 
-def process_zip(uploaded_zip: ZipFile) -> list[UploadedDocument]:
-    """Extract the contents of a zipfile and process the files inside it."""
-    if not uploaded_zip:
-        raise ValueError("No zipfile uploaded for processing")
+def process_zip(zip_file):
+    """
+    Process a zip file containing multiple text files.
+    Returns a list of UploadedDocument objects.
+    """
+    uploaded_docs = []
+    with zip_file as zipf:
+        for file_info in zipf.infolist():
+            with zipf.open(file_info) as file:
+                try:
+                    file_name = os.path.basename(file_info.filename)  # Extract just the file name
+                    content = file.read().decode("utf-8")
+                    uploaded_docs.append(UploadedDocument(content, file_name))
+                except UnicodeDecodeError as e:
+                    print(f"Error decoding {file_info.filename}: {e}. Skipping this file.")
+    return uploaded_docs
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        uploaded_zip.extractall(temp_dir)
-        extracted_files = []
-
-        for filename in Path(temp_dir).rglob('*.txt'):
-            extracted_files.append(filename)
-
-        # list of BytesIO objects for each extracted file
-        bios: list[BytesIO] = []
-        for extracted_file in extracted_files:
-            with open(os.path.join(temp_dir, extracted_file), "rb") as f:
-                bios.append(BytesIO(f.read()))
-                # set the name attribute of the BytesIO object to the extracted file name.
-                # this is used by the UploadedDocument.from_file method to determine the file type
-                bios[-1].name = extracted_file
-
-        file_contents = process_files(bios)
-        for file in file_contents:
-            file.filename = str(file.filename)
-        return file_contents
