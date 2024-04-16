@@ -15,7 +15,11 @@ class UploadedDocument:
 
     @staticmethod
     def from_txt(uploaded_file: BytesIO) -> "UploadedDocument":
-        content = uploaded_file.getvalue().decode("utf-8")
+        try:
+            content = uploaded_file.getvalue().decode("utf-8")
+        except UnicodeDecodeError:
+            content = uploaded_file.getvalue().decode("latin-1")
+
         return UploadedDocument(content, uploaded_file.name)
 
     @staticmethod
