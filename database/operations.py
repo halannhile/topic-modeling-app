@@ -1,11 +1,10 @@
 from typing import Literal
-import pandas as pd
-
-from nlp import UploadedDocument
-from .models import Base, Document
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
+
+from nlp.utils import UploadedDocument
+
+from .models import Base, Document
 
 
 class DatabaseOperations:
@@ -141,7 +140,7 @@ class DatabaseOperations:
         Base.metadata.create_all(self.engine)
         session.commit()
         session.close()
-    
+
     def delete_document(self, document_id):
         session = self.Session()
         try:
