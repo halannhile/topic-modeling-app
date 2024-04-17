@@ -33,8 +33,6 @@ def train_model(docs: list[UploadedDocument], save_path: str) -> None:
     embed_model_path = "sentence-transformers/all-MiniLM-L6-v2"
     embedder = SentenceTransformer(embed_model_path)
 
-    # embeddings = embedder.encode([doc.content for doc in docs])
-    # do this in batches instead:
     batch_size = 32
     embeddings = []
     batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
