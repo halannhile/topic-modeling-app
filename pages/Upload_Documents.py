@@ -95,7 +95,16 @@ with training_tab:
     st.divider()
 
     if uploaded_zip:
-        docs = process_zip(zipfile.ZipFile(uploaded_zip))
+        # cache the documents to avoid unzipping again when the user clicks the button
+        if (
+            "unzip_cache" not in st.session_state
+            or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
+        ):
+            with st.spinner("Unzipping..."):
+                docs = process_zip(zipfile.ZipFile(uploaded_zip))
+                st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
+
+        _, docs = st.session_state["unzip_cache"]
 
         st.write("Uploaded files:")
         for doc in docs[:5]:
