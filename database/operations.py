@@ -158,6 +158,19 @@ class DatabaseOperations:
             print(f"Error deleting document with ID {document_id}: {e}")
         finally:
             session.close()
+    
+    def delete_batch(self, batch_number):
+        session = self.Session()
+        try:
+            # Delete all documents with the specified batch number
+            session.query(Document).filter_by(batch_number=batch_number).delete()
+            session.commit()
+            print(f"All documents with batch number {batch_number} deleted successfully.")
+        except Exception as e:
+            session.rollback()
+            print(f"Error deleting documents with batch number {batch_number}: {e}")
+        finally:
+            session.close()
 
     def get_latest_batch_number(self) -> int:
         session = self.Session()

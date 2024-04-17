@@ -1,6 +1,6 @@
 import streamlit as st
-from database import init_db
 import pandas as pd
+from database import init_db
 
 st.set_page_config(
     page_title="Your Documents",
@@ -52,13 +52,24 @@ if documents:
         "Enter the ID of the document you want to delete:", min_value=1, step=1
     )
 
-    # Delete button
     if st.button("Delete Document"):
         if delete_id:
             db.delete_document(delete_id)
             st.write(f"Document with ID {delete_id} deleted successfully.")
         else:
             st.warning("Please enter a valid ID.")
+
+    # Dropdown menu for selecting batch number to delete
+    batch_number_to_delete = st.selectbox(
+        "Select Batch Number to Delete:", sorted(set(df["Batch Number"]))
+    )
+
+    if st.button("Delete Batch"):
+        if batch_number_to_delete:
+            db.delete_batch(batch_number_to_delete)
+            st.write(f"All documents with batch number {batch_number_to_delete} deleted successfully.")
+        else:
+            st.warning("Please select a valid batch number.")
 
     with st.popover("Clear Database"):
         st.write("Are you sure you want to clear all documents from the database?")

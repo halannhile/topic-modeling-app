@@ -6,6 +6,7 @@ from nlp import SUPPORTED_INPUT_FORMATS
 from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
 from nlp.utils import UploadedDocument, process_files, process_zip
 
+import os
 
 st.set_page_config(
     page_title="Upload Documents",
@@ -90,23 +91,23 @@ with training_tab:
     st.divider()
 
     if uploaded_zip:
-        docs = process_zip(zipfile.ZipFile(uploaded_zip))
-
         st.write("Uploaded files:")
-        for doc in docs:
-            st.write(doc.filename)
+        with zipfile.ZipFile(uploaded_zip) as zip_ref:
+            extracted_files = zip_ref.namelist()
+            for file_name in extracted_files:
+                st.write(file_name)
 
         if st.button("Upload Dataset", key="upload_button_1"):
+            extracted_documents = process_zip(zipfile.ZipFile(uploaded_zip))
 
-            if st.button(
-                "Train Topic Model", disabled=True, help="Not yet implemented"
-            ):
-                # TODO - implement model training
-                # train model first, then analyze topics and save docs to database
-                # don't forget to increment batch number!
-                pass
+            db.save_batch_to_db(
+                docs=extracted_documents,
+                upload_type="dataset",
+                topics=None,
+                probabilities=None,
+            )
+
+            st.success("Dataset uploaded successfully.")
 
     else:
-        st.markdown(
-            "_Please upload one or more files or paste input text for topic analysis._"
-        )
+        st.markdown("_Please upload a zip file for training._")
