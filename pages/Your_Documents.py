@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 st.title("Your Documents")
-db = init_db("sqlite:///db2.db")
+db = init_db("sqlite:///db3.db")
 documents = db.get_documents()  # no batch_number provided
 
 if documents:

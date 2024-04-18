@@ -196,54 +196,69 @@ with inference_tab:
     #             "_Please upload one or more files or paste input text for topic analysis._"
     #         )
 
-    with training_tab:
-        st.title("Upload Dataset for Training")
+with training_tab:
+    st.title("Upload Dataset for Training")
 
-        uploaded_zip = st.file_uploader(
-            "Upload files for topic modeling",
-            type=["zip"],
-            accept_multiple_files=False,
-            label_visibility="collapsed",
-            key="dataset",
+    uploaded_zip = st.file_uploader(
+        "Upload files for topic modeling",
+        type=["zip"],
+        accept_multiple_files=False,
+        label_visibility="collapsed",
+        key="dataset",
+    )
+
+    st.divider()
+
+    if uploaded_zip:
+        # cache the documents to avoid unzipping again when the user clicks the button
+        if (
+            "unzip_cache" not in st.session_state
+            or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
+        ):
+            with st.spinner("Unzipping..."):
+                docs = process_zip(zipfile.ZipFile(uploaded_zip))
+                st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
+
+        _, docs = st.session_state["unzip_cache"]
+
+        st.write("Uploaded files:")
+        for doc in docs[:5]:
+            st.write(doc.filename)
+        if len(docs) > 5:
+            st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
+
+        default_model_path = os.path.join(os.getcwd(), "trained_models\\")
+        model_path = st.text_input(
+            "Enter the path to save the trained model:", value=default_model_path
         )
+        valid_path = os.path.exists(os.path.dirname(model_path))
 
-        st.divider()
+        if st.button(
+            "Train Topic Model",
+            disabled=not valid_path,
+            help="Begin training the model",
+        ):
+            num_clusters = st.sidebar.number_input("Number of Clusters", min_value=2, step=1, value=5)
+            with st.spinner("Training model (this may take a while)..."):
+                train_model_2(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
 
-        if uploaded_zip:
-            # cache the documents to avoid unzipping again when the user clicks the button
-            if (
-                "unzip_cache" not in st.session_state
-                or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
-            ):
-                with st.spinner("Unzipping..."):
-                    docs = process_zip(zipfile.ZipFile(uploaded_zip))
-                    st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
+            # Save documents and model information to the database
+            pbar = st.progress(0.0)
+            for i, doc in enumerate(docs):
+                pbar.progress(i / len(docs), text=f"Saving document {doc.filename}...")
+                db.save_batch_to_db(
+                    [doc],
+                    upload_type="dataset",
+                    topics="",
+                    probabilities="",
+                    model_names=model_path,  # TODO: saving model path as model_names for now
+                    path_to_models=model_path,  # Save model path as path_to_models
+                )
+            pbar.progress(1.0, text="Documents saved to database.")
 
-            _, docs = st.session_state["unzip_cache"]
+            st.success(f"Topic modeling completed. Model and documents saved to database.")
 
-            st.write("Uploaded files:")
-            for doc in docs[:5]:
-                st.write(doc.filename)
-            if len(docs) > 5:
-                st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
-
-            default_model_path = os.path.join(os.getcwd(), "trained_models\\")
-            model_path = st.text_input(
-                "Enter the path to save the trained model:", value=default_model_path
-            )
-            valid_path = os.path.exists(os.path.dirname(model_path))
-
-            if st.button(
-                "Train Topic Model",
-                disabled=not valid_path,
-                help="Begin training the model",
-            ):
-                num_clusters = st.sidebar.number_input("Number of Clusters", min_value=2, step=1, value=5)
-                with st.spinner("Training model (this may take a while)..."):
-                    train_model_2(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
-                st.success(f"Topic modeling completed. Model saved to {model_path}.")
-
-        else:
-            st.markdown(
-                "_Please upload one or more files or paste input text for topic analysis._"
-            )
+    else:
+        st.markdown(
+            "_Please upload one or more files or paste input text for topic analysis._"
+        )
