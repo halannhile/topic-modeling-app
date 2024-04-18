@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
+from nlp.topic_visualizations import visualize_topics
 
 from database import init_db
 from database.models import Document
@@ -11,15 +12,23 @@ def display_visualizations(model, texts):
     if not model:
         model = get_pretrained_model()
 
+    plot_title = f"Topic Bubbles for BERTopicWikipedia"
+
     model = get_pretrained_model()
-    topic_vis = model.visualize_topics(
-                            top_n_topics = 50,
-                            title = f"Topic Bubbles for BERTopicWikipedia")
+
+    topic_vis = visualize_topics(model,
+                                    topics=None,
+                                    top_n_topics=40,
+                                    custom_labels=False,
+                                    title=plot_title,
+                                    width=800,
+                                    height=800,
+                                    new_document="goalscorer scored goals goals goalkeeper")
     topic_vis.update_layout(
-        title_font=dict(color="white"),
-        hoverlabel=dict(bgcolor="black"),
-        width = 800,
-        height = 800)
+                                    title_font=dict(color="white"),
+                                    hoverlabel=dict(bgcolor="black"),
+                                    width = 800,
+                                    height = 800)
     st.plotly_chart(topic_vis)
     
     # model.visualize_documents(texts)
@@ -33,7 +42,6 @@ if __name__ == "__main__":
 
     #model_db = init_db("sqlite:///db1.db")
     #model_session = model_db.Session()
-
 
     # TODO: Model selection dropdown
 
