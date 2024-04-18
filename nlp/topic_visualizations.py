@@ -96,7 +96,7 @@ def visualize_topics(topic_model,
     doc_embedding = topic_model.embedding_model.embed(new_document)
     doc_projection = umap_model.transform([doc_embedding])
     new_doc_df = pd.DataFrame({"x": doc_projection[0][0], "y": doc_projection[0][1],
-                                "Topic": "New Document", "Words": new_document, "Size": [10000]})
+                                "Topic": "New Document", "Words": new_document, "Size": [1000]})
     df = pd.concat([df, new_doc_df], ignore_index=True)
 
     return _plotly_topic_visualization(df, topic_list, title, width, height)
@@ -116,14 +116,16 @@ def _plotly_topic_visualization(df: pd.DataFrame,
             marker_color = ["red" if topic == topic_selected else "#B0BEC5" for topic in topic_list]
         return [{'marker.color': [marker_color]}]
 
+    df["Color"] = ["Your Document" if topic == "New Document" else 'Topics' for topic in df["Topic"]]
+    color_map = {"Your Document": "rgba(255, 0, 0, 1)", "Topics": "rgba(255, 255, 255, .3)"}
     # Prepare figure range
     x_range = (df.x.min() - abs((df.x.min()) * .15), df.x.max() + abs((df.x.max()) * .15))
     y_range = (df.y.min() - abs((df.y.min()) * .15), df.y.max() + abs((df.y.max()) * .15))
 
     # Plot topics
-    fig = px.scatter(df, x="x", y="y", size="Size", size_max=40, template="simple_white", labels={"x": "", "y": ""},
+    fig = px.scatter(df, x="x", y="y", color= "Color", size="Size", size_max=40, template="simple_white", labels={"x": "", "y": ""}, color_discrete_map=color_map,
                      hover_data={"Topic": True, "Words": True, "Size": True, "x": False, "y": False})
-    fig.update_traces(marker=dict(color="#B0BEC5", line=dict(width=2, color='DarkSlateGrey')))
+    #fig.update_traces(marker=dict(color="#B0BEC5", line=dict(width=2, color='DarkSlateGrey')))
 
     # Update hover order
     fig.update_traces(hovertemplate="<br>".join(["<b>Topic %{customdata[0]}</b>",
