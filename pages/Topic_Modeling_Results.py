@@ -1,57 +1,56 @@
 import pandas as pd
 import streamlit as st
-from database import DatabaseOperations
+from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
+from nlp.topic_visualizations import visualize_topics
 
-def display_documents():
-    st.title("Topic Modeling Results")
+from database import init_db
+from database.models import Document
+from sqlalchemy import func
 
-    db = DatabaseOperations("sqlite:///db3.db")
+def display_visualizations(model, texts):
 
-    # fetch all unique values for upload_type, batch_number, model_names, and path_to_models
-    upload_types = db.get_unique_values("upload_type")
-    batch_numbers = db.get_unique_values("batch_number")
-    model_names = db.get_unique_values("model_names")
-    path_to_models = db.get_unique_values("path_to_models")
+    if not model:
+        model = get_pretrained_model()
 
-    # Create dropdown menus for user selection
-    selected_upload_type = st.selectbox("Select Upload Type", upload_types)
-    selected_batch_number = st.selectbox("Select Batch Number", batch_numbers)
-    if selected_upload_type == "dataset":
-        selected_model_name = st.selectbox("Select Model Name", model_names)
-        selected_path_to_model = st.selectbox("Select Path to Model", path_to_models)
+    plot_title = f"Topic Bubbles for BERTopicWikipedia"
 
-    # Fetch documents based on user selection
-    if st.button("Fetch Documents"):
-        documents = db.get_documents_by_filters(
-            upload_type=selected_upload_type,
-            batch_number=selected_batch_number,
-            model_names=selected_model_name if selected_upload_type == "dataset" else None,
-            path_to_models=selected_path_to_model if selected_upload_type == "dataset" else None,
-        )
+    model = get_pretrained_model()
 
-        print("documents: ", documents)
-        print("Number of documents:", len(documents))
-        print("First document:", documents[0] if documents else None)
-
-        if documents:
-            df = pd.DataFrame(
-                documents, 
-                columns=[
-                    "ID",
-                    "Batch Number",
-                    "File Name",
-                    "Time Uploaded",
-                    "Upload Type",
-                    "File Content",
-                    "Topics",
-                    "Probability",
-                    "Model Names",
-                    "Path To Models",
-                ]
-            )
-            st.table(df)
-        else:
-            st.write("No documents found with the selected filters.")
+    topic_vis = visualize_topics(model,
+                                    topics=None,
+                                    top_n_topics=40,
+                                    custom_labels=False,
+                                    title=plot_title,
+                                    width=800,
+                                    height=800,
+                                    new_document="goalscorer scored goals goals goalkeeper")
+    topic_vis.update_layout(
+                                    title_font=dict(color="white"),
+                                    hoverlabel=dict(bgcolor="black"),
+                                    width = 800,
+                                    height = 800)
+    st.plotly_chart(topic_vis)
+    
+    # model.visualize_documents(texts)
 
 if __name__ == "__main__":
-    display_documents()
+
+    st.title("Topic Modeling Visualizations")
+
+    doc_db = init_db("sqlite:///db1.db")
+    doc_session = doc_db.Session()
+
+    #model_db = init_db("sqlite:///db1.db")
+    #model_session = model_db.Session()
+
+    # TODO: Model selection dropdown
+
+    # Document selection dropdown
+    batchnum_list = doc_session.query(Document.batch_number, func.count(Document.batch_number)) \
+                             .group_by(Document.batch_number).all()
+    batchnum_list = [f"Group {b[0]} ({b[1]} documents)" for b in batchnum_list]
+    selected_batch = st.selectbox("Documents to visualize:", batchnum_list)
+
+    if st.button("Visualize documents!", key="visualize_docs_btn"):
+        document_list = doc_session.query(Document).filter(Document.batch_number == selected_batch).all()
+        display_visualizations(None, document_list)
