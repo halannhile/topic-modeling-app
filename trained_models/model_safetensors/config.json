@@ -10,7 +10,8 @@
   "nr_topics": null,
   "seed_topic_list": null,
   "top_n_words": 10,
-  "verbose": false,
+  "verbose": true,
   "zeroshot_min_similarity": 0.7,
-  "zeroshot_topic_list": null
+  "zeroshot_topic_list": null,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
 }

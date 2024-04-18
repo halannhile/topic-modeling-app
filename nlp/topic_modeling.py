@@ -1,6 +1,9 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import streamlit as st
+from bertopic import BERTopic
+from typing import List
+import os
 
 from .utils import UploadedDocument
 
@@ -27,25 +30,26 @@ def transform_doc_pretrained(
 Encountered error: 
 - ValueError: k must be less than or equal to the number of training points
 File "sklearn\neighbors\_binary_tree.pxi", line 1127, in sklearn.neighbors._kd_tree.BinaryTree.query
-
-Nhi's suggestion: 
-- add a check to ensure that the number of documents provided for training is greater than or equal to 
-the number of clusters specified
 '''
 
-def train_model(docs: list[UploadedDocument], save_path: str, num_clusters: int = 5) -> None:
+def train_model(docs: List[UploadedDocument], save_path: str, num_clusters: int = 5) -> None:
+    """
+    Train a BERTopic model on the pre-processed documents and save the model to the specified path.
 
-    # TODO: allow user to choose the num_clusters based on their dataset
-
-    if len(docs) < num_clusters:
-        raise ValueError("Number of documents must be greater than or equal to the number of clusters.")
+    Args:
+        docs (List[UploadedDocument]): Pre-processed documents.
+        save_path (str): Path to save the trained model.
+        num_clusters (int, optional): Number of clusters/topics to extract. Defaults to 5.
+    """
+    # Ensure that the directory exists, create it if it doesn't
+    os.makedirs(save_path, exist_ok=True)
 
     pbar = st.progress(0.0, text="Initializing model...")
 
-    from bertopic import BERTopic
-
+    # Initialize the BERTopic model
     model = BERTopic(verbose=True)
-    # TODO support other embedding models
+
+    # Choose embedding model
     embed_model_path = "sentence-transformers/all-MiniLM-L6-v2"
     embedder = SentenceTransformer(embed_model_path)
 
@@ -61,23 +65,19 @@ def train_model(docs: list[UploadedDocument], save_path: str, num_clusters: int 
     embeddings = np.array(embeddings)
 
     pbar.progress(0.8, text="Training model...")
-    model.fit([doc.content for doc in docs], embeddings=embeddings, n_topics=num_clusters)  # type: ignore
+    # model.fit([doc.content for doc in docs], embeddings=embeddings, n_topics=num_clusters)
+    model.fit([doc.content for doc in docs], embeddings=embeddings)
+
 
     pbar.progress(0.9, text="Saving model...")
     model.save(
-        save_path,
+        os.path.join(save_path, "model_safetensors"),
         serialization="safetensors",
-        save_ctfidf=True,
         save_embedding_model=embed_model_path,
+        save_ctfidf=True,
     )
+
     pbar.progress(1.0, text="Training complete.")
-
-
-from bertopic import BERTopic
-from sentence_transformers import SentenceTransformer
-from typing import List
-from nlp.topic_modeling import UploadedDocument
-import os 
 
 def train_model_2(docs: List[UploadedDocument], save_path: str, num_clusters: int = 5) -> None:
     """

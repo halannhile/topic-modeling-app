@@ -24,7 +24,7 @@ if documents:
                 document.filename,
                 document.upload_time,
                 document.upload_type,
-                document.content[:100] + ('...' if len(document.filename) > 100 else ''),
+                document.content[:100] + ('...' if len(document.content) > 100 else ''),
                 document.topics,
                 document.probabilities,
                 document.model_names,

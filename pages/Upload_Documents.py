@@ -240,7 +240,7 @@ with training_tab:
         ):
             num_clusters = st.sidebar.number_input("Number of Clusters", min_value=2, step=1, value=5)
             with st.spinner("Training model (this may take a while)..."):
-                train_model_2(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
+                train_model(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
 
             # Save documents and model information to the database
             pbar = st.progress(0.0)
@@ -260,5 +260,5 @@ with training_tab:
 
     else:
         st.markdown(
-            "_Please upload one or more files or paste input text for topic analysis._"
+            "_Please upload a zip folder of at least 10 documents for training a topic analysis model._"
         )
