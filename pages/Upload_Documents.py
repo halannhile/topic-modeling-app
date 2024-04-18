@@ -244,19 +244,19 @@ with training_tab:
 
             # Save documents and model information to the database
             pbar = st.progress(0.0)
-            for i, doc in enumerate(docs):
-                pbar.progress(i / len(docs), text=f"Saving document {doc.filename}...")
-                db.save_batch_to_db(
-                    [doc],
-                    upload_type="dataset",
-                    topics="",
-                    probabilities="",
-                    model_names=model_path,  # TODO: saving model path as model_names for now
-                    path_to_models=model_path,  # Save model path as path_to_models
-                )
+            pbar.progress(0.0, text="Saving documents to database...")
+            db.save_batch_to_db(
+                docs,
+                upload_type="dataset",
+                topics="",
+                probabilities="",
+                model_names=model_path,  # Saving model path as model_names for now
+                path_to_models=model_path, 
+            )
             pbar.progress(1.0, text="Documents saved to database.")
 
             st.success(f"Topic modeling completed. Model and documents saved to database.")
+
 
     else:
         st.markdown(
