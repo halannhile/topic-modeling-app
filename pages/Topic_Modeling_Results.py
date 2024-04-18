@@ -6,7 +6,7 @@ from database import init_db
 def display_documents():
     st.title("Topic Modeling Results")
 
-    db = init_db("sqlite:///db1.db")
+    db = init_db("sqlite:///db3.db")
 
     # fetch all documents from the database
     documents = db.get_all_documents()

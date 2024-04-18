@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 st.title("Your Documents")
-db = init_db("sqlite:///db1.db")
+db = init_db("sqlite:///db2.db")
 documents = db.get_documents()  # no batch_number provided
 
 if documents:
@@ -24,9 +24,11 @@ if documents:
                 document.filename,
                 document.upload_time,
                 document.upload_type,
-                document.content,
+                document.content[:100] + ('...' if len(document.filename) > 100 else ''),
                 document.topics,
                 document.probabilities,
+                document.model_names,
+                document.path_to_models,
             ]
         )
 
@@ -41,6 +43,8 @@ if documents:
             "File Content",
             "Topics",
             "Probability",
+            "Model Names",
+            "Path To Models",
         ],
     )
 

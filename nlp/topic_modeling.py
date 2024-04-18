@@ -112,8 +112,3 @@ def train_model_2(docs: List[UploadedDocument], save_path: str, num_clusters: in
     model.save(os.path.join(save_path, "model.pickle"), serialization="pickle")
     model.save(os.path.join(save_path, "model_safetensors"), serialization="safetensors", save_embedding_model=True, save_ctfidf=False)
     model.save(os.path.join(save_path, "model_pytorch"), serialization="pytorch")
-
-
-
-
-

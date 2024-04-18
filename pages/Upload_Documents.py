@@ -21,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-db = init_db("sqlite:///db1.db")
+db = init_db("sqlite:///db3.db")
 
 
 inference_tab, training_tab = st.tabs(
@@ -73,6 +73,8 @@ with inference_tab:
                     upload_type="documents",
                     topics=label,
                     probabilities=str(prob),
+                    model_names="Not available for documents upload",
+                    path_to_models="Not available for documents upload",
                 )
             pbar.progress(1.0, text="Analysis complete.")
 
@@ -245,4 +247,3 @@ with inference_tab:
             st.markdown(
                 "_Please upload one or more files or paste input text for topic analysis._"
             )
-

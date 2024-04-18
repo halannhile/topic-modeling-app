@@ -80,9 +80,12 @@ class DatabaseOperations:
         upload_type: Literal["documents", "dataset"],
         topics,
         probabilities,
+        model_names,
+        path_to_models,
     ):
         session = self.Session()
-        batch_number = self.get_latest_batch_number() + 1
+        batch_number = self.get_latest_batch_number() + 1 # TODO: not working correctly for zip upload yet
+
         try:
             for doc in docs:
                 # check if the document already exists in the database for the given upload type
@@ -103,6 +106,8 @@ class DatabaseOperations:
                         upload_type=upload_type,
                         topics=topics,
                         probabilities=probabilities,
+                        model_names=model_names,
+                        path_to_models=path_to_models,
                     )
                     session.add(document)
             session.commit()
@@ -112,6 +117,7 @@ class DatabaseOperations:
             session.rollback()
             session.close()
             print(f"Error saving documents: {e}")
+
 
     def get_documents(self, batch_number=None):
         session = self.Session()
@@ -127,7 +133,7 @@ class DatabaseOperations:
     def get_all_documents(self):
         session = self.Session()
         documents = session.query(
-            Document.filename, Document.content, Document.topics, Document.probabilities
+            Document.filename, Document.content, Document.topics, Document.probabilities, Document.model_names, Document.path_to_models
         ).all()
         session.close()
         return documents
@@ -183,3 +189,18 @@ class DatabaseOperations:
             return latest_batch.batch_number  # type: ignore
         else:
             return 0  # return 0 if no batches exist
+
+    def get_unique_values(self, column_name):
+        session = self.Session()
+        try:
+            unique_values = (
+                session.query(getattr(Document, column_name))
+                .distinct()
+                .all()
+            )
+            session.close()
+            return [value[0] for value in unique_values]
+        except Exception as e:
+            session.close()
+            print(f"Error fetching unique values for {column_name}: {e}")
+            return []
