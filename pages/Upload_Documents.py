@@ -1,9 +1,15 @@
+import os
 import streamlit as st
 from database import init_db
 import zipfile
 
 from nlp import SUPPORTED_INPUT_FORMATS
-from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
+from nlp.topic_modeling import (
+    get_pretrained_model,
+    transform_doc_pretrained,
+    train_model,
+    train_model_2
+)
 from nlp.utils import UploadedDocument, process_files, process_zip
 
 import os
@@ -77,37 +83,166 @@ with inference_tab:
             "_Please upload one or more files or enter text for topic analysis._"
         )
 
-with training_tab:
-    st.title("Upload Dataset for Training")
+################################### IAN'S CODE ###################################
 
-    uploaded_zip = st.file_uploader(
-        "Upload files for topic modeling",
-        type=["zip"],
-        accept_multiple_files=False,
-        label_visibility="collapsed",
-        key="dataset",
-    )
+# with training_tab:
+#     st.title("Upload Dataset for Training")
 
-    st.divider()
+#     uploaded_zip = st.file_uploader(
+#         "Upload files for topic modeling",
+#         type=["zip"],
+#         accept_multiple_files=False,
+#         label_visibility="collapsed",
+#         key="dataset",
+#     )
 
-    if uploaded_zip:
-        st.write("Uploaded files:")
-        with zipfile.ZipFile(uploaded_zip) as zip_ref:
-            extracted_files = zip_ref.namelist()
-            for file_name in extracted_files:
-                st.write(file_name)
+#     st.divider()
 
-        if st.button("Upload Dataset", key="upload_button_1"):
-            extracted_documents = process_zip(zipfile.ZipFile(uploaded_zip))
+#     if uploaded_zip:
+#         # cache the documents to avoid unzipping again when the user clicks the button
+#         if (
+#             "unzip_cache" not in st.session_state
+#             or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
+#         ):
+#             with st.spinner("Unzipping..."):
+#                 docs = process_zip(zipfile.ZipFile(uploaded_zip))
+#                 st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
 
-            db.save_batch_to_db(
-                docs=extracted_documents,
-                upload_type="dataset",
-                topics=None,
-                probabilities=None,
+#         _, docs = st.session_state["unzip_cache"]
+
+#         st.write("Uploaded files:")
+#         for doc in docs[:5]:
+#             st.write(doc.filename)
+#         if len(docs) > 5:
+#             st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
+
+#         default_model_path = os.path.join(os.getcwd(), "trained_model")
+#         model_path = st.text_input(
+#             "Enter the path to save the trained model:", value=default_model_path
+#         )
+#         valid_path = os.path.exists(os.path.dirname(model_path))
+
+#         if st.button(
+#             "Train Topic Model",
+#             disabled=not valid_path,
+#             help="Begin training the model",
+#         ):
+#             with st.spinner("Training model (this may take a while)..."):
+#                 train_model(docs, model_path)
+#             st.success(f"Topic modeling completed. Model saved to {model_path}.")
+
+#     else:
+#         st.markdown(
+#             "_Please upload one or more files or paste input text for topic analysis._"
+#         )
+
+
+######################### NHI'S APPROACH: USING TRAIN_MODEL_2() #########################
+
+    # with st.sidebar:
+    #     st.title("Settings")
+    #     num_clusters = st.number_input("Number of Clusters", min_value=2, step=1, value=5)
+
+    # with training_tab:
+    #     st.title("Upload Dataset for Training")
+
+    #     uploaded_zip = st.file_uploader(
+    #         "Upload files for topic modeling",
+    #         type=["zip"],
+    #         accept_multiple_files=False,
+    #         label_visibility="collapsed",
+    #         key="dataset",
+    #     )
+
+    #     st.divider()
+
+    #     if uploaded_zip:
+    #         # cache the documents to avoid unzipping again when the user clicks the button
+    #         if (
+    #             "unzip_cache" not in st.session_state
+    #             or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
+    #         ):
+    #             with st.spinner("Unzipping..."):
+    #                 docs = process_zip(zipfile.ZipFile(uploaded_zip))
+    #                 st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
+
+    #         _, docs = st.session_state["unzip_cache"]
+
+    #         st.write("Uploaded files:")
+    #         for doc in docs[:5]:
+    #             st.write(doc.filename)
+    #         if len(docs) > 5:
+    #             st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
+
+    #         default_model_path = os.path.join(os.getcwd(), "trained_model")
+    #         model_path = st.text_input(
+    #             "Enter the path to save the trained model:", value=default_model_path
+    #         )
+    #         valid_path = os.path.exists(os.path.dirname(model_path))
+
+    #         if st.button(
+    #             "Train Topic Model",
+    #             disabled=not valid_path,
+    #             help="Begin training the model",
+    #         ):
+    #             with st.spinner("Training model (this may take a while)..."):
+    #                 train_model(uploaded_zip, model_path, num_clusters)  # Use train_model_2 instead of train_model
+    #             st.success(f"Topic modeling completed. Model saved to {model_path}.")
+
+    #     else:
+    #         st.markdown(
+    #             "_Please upload one or more files or paste input text for topic analysis._"
+    #         )
+
+    with training_tab:
+        st.title("Upload Dataset for Training")
+
+        uploaded_zip = st.file_uploader(
+            "Upload files for topic modeling",
+            type=["zip"],
+            accept_multiple_files=False,
+            label_visibility="collapsed",
+            key="dataset",
+        )
+
+        st.divider()
+
+        if uploaded_zip:
+            # cache the documents to avoid unzipping again when the user clicks the button
+            if (
+                "unzip_cache" not in st.session_state
+                or st.session_state["unzip_cache"][0] != uploaded_zip.file_id
+            ):
+                with st.spinner("Unzipping..."):
+                    docs = process_zip(zipfile.ZipFile(uploaded_zip))
+                    st.session_state["unzip_cache"] = (uploaded_zip.file_id, docs)
+
+            _, docs = st.session_state["unzip_cache"]
+
+            st.write("Uploaded files:")
+            for doc in docs[:5]:
+                st.write(doc.filename)
+            if len(docs) > 5:
+                st.write(f"and {len(docs) - 5} more files ({len(docs)} total)")
+
+            default_model_path = os.path.join(os.getcwd(), "trained_models\\")
+            model_path = st.text_input(
+                "Enter the path to save the trained model:", value=default_model_path
+            )
+            valid_path = os.path.exists(os.path.dirname(model_path))
+
+            if st.button(
+                "Train Topic Model",
+                disabled=not valid_path,
+                help="Begin training the model",
+            ):
+                num_clusters = st.sidebar.number_input("Number of Clusters", min_value=2, step=1, value=5)
+                with st.spinner("Training model (this may take a while)..."):
+                    train_model_2(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
+                st.success(f"Topic modeling completed. Model saved to {model_path}.")
+
+        else:
+            st.markdown(
+                "_Please upload one or more files or paste input text for topic analysis._"
             )
 
-            st.success("Dataset uploaded successfully.")
-
-    else:
-        st.markdown("_Please upload a zip file for training._")

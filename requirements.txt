@@ -42,3 +42,4 @@ urllib3==2.2.1
 wheel==0.41.2
 textract==1.6.5
 python-docx==1.1.0
+gensim==4.3.2
