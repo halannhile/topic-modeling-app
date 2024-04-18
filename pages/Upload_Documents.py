@@ -195,7 +195,6 @@ with inference_tab:
     #         st.markdown(
     #             "_Please upload one or more files or paste input text for topic analysis._"
     #         )
-
 with training_tab:
     st.title("Upload Dataset for Training")
 
@@ -232,13 +231,15 @@ with training_tab:
             "Enter the path to save the trained model:", value=default_model_path
         )
         valid_path = os.path.exists(os.path.dirname(model_path))
+        
+        # Number of Clusters input
+        num_clusters = st.number_input("Number of Clusters", min_value=2, step=1, value=5)
 
         if st.button(
             "Train Topic Model",
             disabled=not valid_path,
             help="Begin training the model",
         ):
-            num_clusters = st.sidebar.number_input("Number of Clusters", min_value=2, step=1, value=5)
             with st.spinner("Training model (this may take a while)..."):
                 train_model(docs, model_path, num_clusters)  # Use train_model instead of train_model_2
 
@@ -262,3 +263,4 @@ with training_tab:
         st.markdown(
             "_Please upload a zip folder of at least 10 documents for training a topic analysis model._"
         )
+
