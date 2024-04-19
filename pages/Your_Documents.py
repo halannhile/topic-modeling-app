@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 st.title("Your Documents")
-db = init_db("sqlite:///db3.db")
+db = init_db()
 documents = db.get_documents()  # no batch_number provided
 
 if documents:
@@ -24,7 +24,7 @@ if documents:
                 document.filename,
                 document.upload_time,
                 document.upload_type,
-                document.content[:100] + ('...' if len(document.content) > 100 else ''),
+                document.content[:100] + ("..." if len(document.content) > 100 else ""),
                 document.topics,
                 document.probabilities,
                 document.model_names,
@@ -71,7 +71,9 @@ if documents:
     if st.button("Delete Batch"):
         if batch_number_to_delete:
             db.delete_batch(batch_number_to_delete)
-            st.write(f"All documents with batch number {batch_number_to_delete} deleted successfully.")
+            st.write(
+                f"All documents with batch number {batch_number_to_delete} deleted successfully."
+            )
         else:
             st.warning("Please select a valid batch number.")
 
