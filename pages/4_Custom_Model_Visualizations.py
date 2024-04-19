@@ -11,7 +11,11 @@ from sentence_transformers import SentenceTransformer
 from bertopic import BERTopic
 from umap import UMAP
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Custom Model Visualizations",
+    page_icon="📊",
+    layout="wide",
+)
 
 
 def visualize_topic_model(topic_model, docs, embeddings):

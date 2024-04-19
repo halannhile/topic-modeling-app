@@ -8,6 +8,12 @@ from sqlalchemy import func
 
 from umap import UMAP
 
+st.set_page_config(
+    page_title="Topic Modeling Visualizations",
+    page_icon="📊",
+    layout="wide",
+)
+
 
 def display_single_visualizations(model_path, texts):
 
