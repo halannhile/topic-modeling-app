@@ -118,6 +118,7 @@ class DatabaseOperations:
     def get_documents(
         self,
         batch_number: int | None = None,
+        upload_type: str | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ):
@@ -125,6 +126,8 @@ class DatabaseOperations:
         documents = session.query(Document)
         if batch_number is not None:
             documents = documents.filter_by(batch_number=batch_number)
+        if upload_type is not None:
+            documents = documents.filter_by(upload_type=upload_type)
         if offset is not None:
             documents = documents.offset(offset)
         if limit is not None:
@@ -225,37 +228,3 @@ class DatabaseOperations:
             session.close()
             print(f"Error fetching unique values for {column_name}: {e}")
             return []
-
-    def get_documents_by_filters(
-        self, upload_type, batch_number, model_names=None, path_to_models=None
-    ):
-        session = self.Session()
-        query = session.query(Document).filter_by(
-            batch_number=batch_number, upload_type=upload_type
-        )
-        if upload_type == "dataset":
-            query = query.filter_by(
-                model_names=model_names, path_to_models=path_to_models
-            )
-        documents = query.all()
-        session.close()
-        # Extract relevant attributes from documents and return as a list of tuples or dictionaries
-        document_data = []
-        for document in documents:
-            if document:
-                document_data.append(
-                    (
-                        document.id,
-                        document.batch_number,
-                        document.filename,
-                        document.upload_time,
-                        document.upload_type,
-                        document.content[:100]
-                        + ("..." if len(document.content) > 100 else ""),
-                        document.topics,
-                        document.probabilities,
-                        document.model_names,
-                        document.path_to_models,
-                    )
-                )
-        return document_data

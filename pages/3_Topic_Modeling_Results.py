@@ -52,6 +52,12 @@ if __name__ == "__main__":
         .group_by(Document.batch_number)
         .all()
     )
+    if not batchnum_list:
+        st.warning("No documents available for visualization.")
+        if st.button("Upload documents", type="primary"):
+            st.switch_page("pages/2_Upload_Documents.py")
+        st.stop()
+
     batchnum_list = [f"Group {b[0]} ({b[1]} documents)" for b in batchnum_list]
     selected_batch_option = st.selectbox("Pick documents to visualize:", batchnum_list)
     if not selected_batch_option:
@@ -61,9 +67,9 @@ if __name__ == "__main__":
     model_list = (
         doc_session.query(Document.model_names).group_by(Document.model_names).all()
     )
-    model_list = set(["BERTopic Wikipedia"] + [model[0] for model in model_list])
+    model_list = set([model[0] for model in model_list])
     model_list.discard("Not available for documents upload")
-    model_list = list(model_list)
+    model_list = ["BERTopic Wikipedia"] + list(model_list)
 
     selected_model = st.selectbox("Pick a model:", model_list)
     if selected_model == "BERTopic Wikipedia":

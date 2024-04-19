@@ -10,5 +10,5 @@ python -m pip install -r requirements.txt
 ```
 2. Run the streamlit app
 ```
-python -m streamlit run Dashboard.py
+python -m streamlit run Your_Documents.py
 ```

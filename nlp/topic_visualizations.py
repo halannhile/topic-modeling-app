@@ -189,14 +189,14 @@ def _plotly_topic_visualization(
         )
     )
 
-    # Create a slider for topic selection
     steps = [
         dict(label=f"Topic {topic}", method="update", args=get_color(topic))
         for topic in topic_list
     ]
+    # Create a slider for topic selection
+    # sliders = [dict(active=0, pad={"t": 50}, steps=steps)]
 
     # Stylize layout
-    # sliders = [dict(active=0, pad={"t": 50}, steps=steps)]
     fig.update_layout(
         title={
             "text": f"{title}",
@@ -211,7 +211,7 @@ def _plotly_topic_visualization(
         hoverlabel=dict(bgcolor="white", font_size=16, font_family="Rockwell"),
         xaxis={"visible": False},
         yaxis={"visible": False},
-        # sliders=sliders
+        # sliders=sliders,
     )
 
     # Update axes ranges
