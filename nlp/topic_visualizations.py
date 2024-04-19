@@ -17,7 +17,7 @@ def visualize_topics(
     title: str = "<b>Intertopic Distance Map</b>",
     width: int = 650,
     height: int = 650,
-    new_document: str | None = None,
+    new_documents: list[str] | None = None,
 ) -> go.Figure:
     """Visualize topics, their sizes, and their corresponding words
 
@@ -115,18 +115,19 @@ def visualize_topics(
     )
 
     # Add new doc after projection
-    doc_embedding = topic_model.embedding_model.embed(new_document)
-    doc_projection = umap_model.transform([doc_embedding])
-    new_doc_df = pd.DataFrame(
-        {
-            "x": doc_projection[0][0],
-            "y": doc_projection[0][1],
-            "Topic": "New Document",
-            "Words": new_document[:25],
-            "Size": [1000],
-        }
-    )
-    df = pd.concat([df, new_doc_df], ignore_index=True)
+    for new_document in new_documents:
+        doc_embedding = topic_model.embedding_model.embed(new_document)
+        doc_projection = umap_model.transform([doc_embedding])
+        new_doc_df = pd.DataFrame(
+            {
+                "x": doc_projection[0][0],
+                "y": doc_projection[0][1],
+                "Topic": "New Document",
+                "Words": new_document[:25] + "...",
+                "Size": [df['Size'].max() * .2],
+            }
+        )
+        df = pd.concat([df, new_doc_df], ignore_index=True)
 
     return _plotly_topic_visualization(df, topic_list, title, width, height)
 

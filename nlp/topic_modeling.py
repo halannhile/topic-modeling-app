@@ -17,9 +17,9 @@ def get_pretrained_model(model_path: str = "MaartenGr/BERTopic_Wikipedia"):
 
 
 def transform_doc_pretrained(
-    doc: UploadedDocument,
+    doc: UploadedDocument, model_path: str = "MaartenGr/BERTopic_Wikipedia"
 ) -> tuple[int, float, str]:
-    pretrained_model = get_pretrained_model()
+    pretrained_model = get_pretrained_model(model_path)
     topic, prob = pretrained_model.transform(doc.content)
     return topic[0], prob.item(), pretrained_model.topic_labels_[topic[0]]  # type: ignore
 
