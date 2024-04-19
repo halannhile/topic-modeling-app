@@ -10,23 +10,31 @@ from sentence_transformers import SentenceTransformer
 from bertopic import BERTopic
 from umap import UMAP
 
+
 def visualize_topic_model(topic_model, docs, embeddings):
     # Run the visualization with the original embeddings
-    reduced_embeddings = UMAP(n_neighbors=10, n_components=2, min_dist=0.0, metric='cosine').fit_transform(embeddings)
-    
+    reduced_embeddings = UMAP(
+        n_neighbors=10, n_components=2, min_dist=0.0, metric="cosine"
+    ).fit_transform(embeddings)
+
     visualizations = [
-        ("Hierarchical Documents and Topics", topic_model.visualize_documents(docs, reduced_embeddings=reduced_embeddings)),
+        (
+            "Hierarchical Documents and Topics",
+            topic_model.visualize_documents(
+                docs, reduced_embeddings=reduced_embeddings
+            ),
+        ),
         ("Topic Word Score", topic_model.visualize_barchart()),
         ("Similarity Matrix", topic_model.visualize_heatmap()),
     ]
-    
+
     for title, viz in visualizations:
         viz.update_layout(
             title_font=dict(color="white"),
             hoverlabel=dict(bgcolor="black"),
             width=800,
             height=800,
-            title=title
+            title=title,
         )
         st.plotly_chart(viz)
 
@@ -35,8 +43,11 @@ def visualize_topic_model(topic_model, docs, embeddings):
     visualize_distribution(topic_model, topic_distr, docs)
 
     # Visualize Approximate Distribution
-    topic_distr, topic_token_distr = topic_model.approximate_distribution(docs, calculate_tokens=True)
+    topic_distr, topic_token_distr = topic_model.approximate_distribution(
+        docs, calculate_tokens=True
+    )
     visualize_approximate_distribution(topic_model, docs[1], topic_token_distr[1])
+
 
 def visualize_distribution(topic_model, topic_distr, docs):
     topic_options = [f"Topic {i}" for i in range(len(topic_distr))]
@@ -50,13 +61,15 @@ def visualize_distribution(topic_model, topic_distr, docs):
             hoverlabel=dict(bgcolor="black"),
             width=800,
             height=800,
-            title=f"Topic {topic_index} Probability Distribution"
+            title=f"Topic {topic_index} Probability Distribution",
         )
         st.plotly_chart(viz)
+
 
 def visualize_approximate_distribution(topic_model, doc, topic_token_distr):
     df = topic_model.visualize_approximate_distribution(doc, topic_token_distr)
     st.write(df)
+
 
 if __name__ == "__main__":
     st.title("Even More Bertopic Visualizations")
@@ -70,6 +83,11 @@ if __name__ == "__main__":
         .group_by(Document.batch_number)
         .all()
     )
+    if not batchnum_list:
+        st.warning("No documents available for visualization.")
+        if st.button("Upload documents", type="primary"):
+            st.switch_page("pages/2_Upload_Documents.py")
+        st.stop()
     batchnum_list = [f"Group {b[0]} ({b[1]} documents)" for b in batchnum_list]
     selected_batch_option = st.selectbox("Pick documents to visualize:", batchnum_list)
     if not selected_batch_option:
@@ -95,11 +113,11 @@ if __name__ == "__main__":
             .all()
         )
         docs = [doc.content for doc in document_list]
-        print(docs[:2]) # view format of docs
+        print(docs[:2])  # view format of docs
 
         with st.spinner("Creating your visualizations:"):
 
-            # an example docs: 
+            # an example docs:
             # docs = fetch_20newsgroups(subset='all',  remove=('headers', 'footers', 'quotes'))['data'][:1000]
 
             sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
