@@ -1,11 +1,12 @@
 import pandas as pd
 import streamlit as st
-from database import DatabaseOperations
+from database import init_db
+
 
 def display_documents():
     st.title("Topic Modeling Results")
 
-    db = DatabaseOperations("sqlite:///db3.db")
+    db = init_db()
 
     # fetch all unique values for upload_type, batch_number, model_names, and path_to_models
     upload_types = db.get_unique_values("upload_type")
@@ -25,8 +26,12 @@ def display_documents():
         documents = db.get_documents_by_filters(
             upload_type=selected_upload_type,
             batch_number=selected_batch_number,
-            model_names=selected_model_name if selected_upload_type == "dataset" else None,
-            path_to_models=selected_path_to_model if selected_upload_type == "dataset" else None,
+            model_names=(
+                selected_model_name if selected_upload_type == "dataset" else None
+            ),
+            path_to_models=(
+                selected_path_to_model if selected_upload_type == "dataset" else None
+            ),
         )
 
         print("documents: ", documents)
@@ -35,7 +40,7 @@ def display_documents():
 
         if documents:
             df = pd.DataFrame(
-                documents, 
+                documents,
                 columns=[
                     "ID",
                     "Batch Number",
@@ -47,11 +52,12 @@ def display_documents():
                     "Probability",
                     "Model Names",
                     "Path To Models",
-                ]
+                ],
             )
             st.table(df)
         else:
             st.write("No documents found with the selected filters.")
+
 
 if __name__ == "__main__":
     display_documents()
