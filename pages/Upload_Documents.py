@@ -126,7 +126,6 @@ with training_tab:
 
         if st.button(
             "Train Topic Model",
-            disabled=not valid_path,
             help="Begin training the model",
         ):
             with st.spinner("Training model (this may take a while)..."):
