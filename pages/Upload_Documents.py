@@ -132,8 +132,7 @@ with training_tab:
                 train_model(docs, model_path)
 
             # Save documents and model information to the database
-            pbar = st.progress(0.0)
-            pbar.progress(0.0, text="Saving documents to database...")
+            pbar = st.progress(0.0, text="Saving documents to database...")
             db.save_batch_to_db(
                 docs,
                 upload_type="dataset",
@@ -141,6 +140,7 @@ with training_tab:
                 probabilities="",
                 model_names=model_path,  # Saving model path as model_names for now
                 path_to_models=model_path,
+                prog_bar=pbar,
             )
             pbar.progress(1.0, text="Documents saved to database.")
 

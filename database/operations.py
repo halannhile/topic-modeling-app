@@ -1,6 +1,8 @@
 from typing import Literal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
 
 from nlp.utils import UploadedDocument
 
@@ -82,34 +84,30 @@ class DatabaseOperations:
         probabilities,
         model_names,
         path_to_models,
+        prog_bar: DeltaGenerator | None = None,
     ):
         session = self.Session()
-        batch_number = self.get_latest_batch_number() + 1 # TODO: not working correctly for zip upload yet
+        batch_number = (
+            self.get_latest_batch_number() + 1
+        )  # TODO: not working correctly for zip upload yet
 
         try:
-            for doc in docs:
-                # check if the document already exists in the database for the given upload type
-                existing_document = (
-                    session.query(Document)
-                    .filter_by(filename=doc.filename, upload_type=upload_type)
-                    .first()
+            for i, doc in enumerate(docs):
+                if prog_bar:
+                    prog_bar.progress(i / len(docs))
+
+                content_str = doc.content
+                document = Document(
+                    filename=doc.filename,
+                    batch_number=batch_number,
+                    content=content_str,
+                    upload_type=upload_type,
+                    topics=topics,
+                    probabilities=probabilities,
+                    model_names=model_names,
+                    path_to_models=path_to_models,
                 )
-                if existing_document:
-                    existing_document.content = doc.content
-                else:
-                    # if the document does not exist for the given upload type, create a new record
-                    content_str = doc.content
-                    document = Document(
-                        filename=doc.filename,
-                        batch_number=batch_number,
-                        content=content_str,
-                        upload_type=upload_type,
-                        topics=topics,
-                        probabilities=probabilities,
-                        model_names=model_names,
-                        path_to_models=path_to_models,
-                    )
-                    session.add(document)
+                session.add(document)
             session.commit()
             session.close()
             print("Documents saved successfully.")
@@ -117,7 +115,6 @@ class DatabaseOperations:
             session.rollback()
             session.close()
             print(f"Error saving documents: {e}")
-
 
     def get_documents(self, batch_number=None):
         session = self.Session()
@@ -133,7 +130,12 @@ class DatabaseOperations:
     def get_all_documents(self):
         session = self.Session()
         documents = session.query(
-            Document.filename, Document.content, Document.topics, Document.probabilities, Document.model_names, Document.path_to_models
+            Document.filename,
+            Document.content,
+            Document.topics,
+            Document.probabilities,
+            Document.model_names,
+            Document.path_to_models,
         ).all()
         session.close()
         return documents
@@ -164,14 +166,16 @@ class DatabaseOperations:
             print(f"Error deleting document with ID {document_id}: {e}")
         finally:
             session.close()
-    
+
     def delete_batch(self, batch_number):
         session = self.Session()
         try:
             # Delete all documents with the specified batch number
             session.query(Document).filter_by(batch_number=batch_number).delete()
             session.commit()
-            print(f"All documents with batch number {batch_number} deleted successfully.")
+            print(
+                f"All documents with batch number {batch_number} deleted successfully."
+            )
         except Exception as e:
             session.rollback()
             print(f"Error deleting documents with batch number {batch_number}: {e}")
@@ -194,9 +198,7 @@ class DatabaseOperations:
         session = self.Session()
         try:
             unique_values = (
-                session.query(getattr(Document, column_name))
-                .distinct()
-                .all()
+                session.query(getattr(Document, column_name)).distinct().all()
             )
             session.close()
             return [value[0] for value in unique_values]
@@ -204,12 +206,18 @@ class DatabaseOperations:
             session.close()
             print(f"Error fetching unique values for {column_name}: {e}")
             return []
-    
-    def get_documents_by_filters(self, upload_type, batch_number, model_names=None, path_to_models=None):
+
+    def get_documents_by_filters(
+        self, upload_type, batch_number, model_names=None, path_to_models=None
+    ):
         session = self.Session()
-        query = session.query(Document).filter_by(batch_number=batch_number, upload_type=upload_type)
+        query = session.query(Document).filter_by(
+            batch_number=batch_number, upload_type=upload_type
+        )
         if upload_type == "dataset":
-            query = query.filter_by(model_names=model_names, path_to_models=path_to_models)
+            query = query.filter_by(
+                model_names=model_names, path_to_models=path_to_models
+            )
         documents = query.all()
         session.close()
         # Extract relevant attributes from documents and return as a list of tuples or dictionaries
@@ -223,7 +231,8 @@ class DatabaseOperations:
                         document.filename,
                         document.upload_time,
                         document.upload_type,
-                        document.content[:100] + ('...' if len(document.content) > 100 else ''),
+                        document.content[:100]
+                        + ("..." if len(document.content) > 100 else ""),
                         document.topics,
                         document.probabilities,
                         document.model_names,
