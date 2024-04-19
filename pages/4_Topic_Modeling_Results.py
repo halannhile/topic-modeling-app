@@ -92,11 +92,11 @@ if __name__ == "__main__":
         texts = [doc.content for doc in document_list]
 
         if len(texts) == 1:
-            idx, probs, topic = transform_doc_pretrained(document_list[0])
+            idx, probs, topic = transform_doc_pretrained(document_list[0], selected_model)
             txt = st.text_area(
-                f"You selected a single document: {document_list[0].filename}\n\n The model classifies it as the topic {topic} with {round(probs*100, 3)}% probability",
+                f"You selected a single document: {document_list[0].filename}\n\n The model classifies it as the topic {topic} with {round(probs*100, 3)}% probability:",
                 texts[0],
-                height = 500
+                height = None if len(texts[0]) < 2000 else 500
             )
             with st.spinner("Creating your visualizations:"):
                 display_single_visualizations(selected_model, texts)
