@@ -1,4 +1,5 @@
 from typing import Literal
+from unittest import result
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import streamlit as st
@@ -116,16 +117,24 @@ class DatabaseOperations:
             session.close()
             print(f"Error saving documents: {e}")
 
-    def get_documents(self, batch_number=None):
+    def get_documents(
+        self,
+        batch_number: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ):
         session = self.Session()
-        if batch_number is None:
-            documents = session.query(Document).all()
-        else:
-            documents = (
-                session.query(Document).filter_by(batch_number=batch_number).all()
-            )
+        documents = session.query(Document)
+        if batch_number is not None:
+            documents = documents.filter_by(batch_number=batch_number)
+        if offset is not None:
+            documents = documents.offset(offset)
+        if limit is not None:
+            documents = documents.limit(limit)
+
+        result = documents.all()
         session.close()
-        return documents
+        return result
 
     def get_all_documents(self):
         session = self.Session()
@@ -139,6 +148,18 @@ class DatabaseOperations:
         ).all()
         session.close()
         return documents
+
+    def get_all_batches(self) -> list[int]:
+        session = self.Session()
+        # get all distinct batch numbers in ascending order
+        batch_numbers = (
+            session.query(Document.batch_number)
+            .distinct()
+            .order_by(Document.batch_number)
+            .all()
+        )
+        session.close()
+        return [batch_number[0] for batch_number in batch_numbers]
 
     def clear_database(self):
         session = self.Session()
