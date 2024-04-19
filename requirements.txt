@@ -97,3 +97,5 @@ Werkzeug==3.0.2
 wheel==0.41.2
 xlrd==1.2.0
 XlsxWriter==3.2.0
+umap==0.1.1
+umap-learn==0.5.6

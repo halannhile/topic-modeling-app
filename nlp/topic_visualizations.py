@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from umap import UMAP
+from umap.umap_ import UMAP
 from sklearn.preprocessing import MinMaxScaler
 
 import plotly.express as px
