@@ -1,9 +1,7 @@
 import numpy as np
+import os
 from sentence_transformers import SentenceTransformer
 import streamlit as st
-from bertopic import BERTopic
-from typing import List
-import os
 
 from .utils import UploadedDocument
 
@@ -14,7 +12,7 @@ def get_pretrained_model(model_path: str = "MaartenGr/BERTopic_Wikipedia"):
     # so we only want to import it when we need it
     from bertopic import BERTopic
 
-    model = BERTopic.load(model_path)
+    model: BERTopic = BERTopic.load(model_path)
     return model
 
 
@@ -26,25 +24,21 @@ def transform_doc_pretrained(
     return topic[0], prob.item(), pretrained_model.topic_labels_[topic[0]]  # type: ignore
 
 
-'''
-Encountered error: 
-- ValueError: k must be less than or equal to the number of training points
-File "sklearn\neighbors\_binary_tree.pxi", line 1127, in sklearn.neighbors._kd_tree.BinaryTree.query
-'''
-
-def train_model(docs: List[UploadedDocument], save_path: str, num_clusters: int = 5) -> None:
+def train_model(docs: list[UploadedDocument], save_path: str) -> None:
     """
     Train a BERTopic model on the pre-processed documents and save the model to the specified path.
 
     Args:
         docs (List[UploadedDocument]): Pre-processed documents.
         save_path (str): Path to save the trained model.
-        num_clusters (int, optional): Number of clusters/topics to extract. Defaults to 5.
     """
     # Ensure that the directory exists, create it if it doesn't
     os.makedirs(save_path, exist_ok=True)
 
     pbar = st.progress(0.0, text="Initializing model...")
+
+    # Like in get_pretrained_model above, we only want to import this when we need it
+    from bertopic import BERTopic
 
     # Initialize the BERTopic model
     model = BERTopic(verbose=True)
@@ -53,6 +47,8 @@ def train_model(docs: List[UploadedDocument], save_path: str, num_clusters: int 
     embed_model_path = "sentence-transformers/all-MiniLM-L6-v2"
     embedder = SentenceTransformer(embed_model_path)
 
+    # Pre-calculate embeddings for the sole purpose of getting a progress bar
+    # (letting model.fit() handle this step = no progress bar)
     batch_size = 32
     embeddings = []
     batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
@@ -64,11 +60,11 @@ def train_model(docs: List[UploadedDocument], save_path: str, num_clusters: int 
         embeddings.extend(embedder.encode([doc.content for doc in batch]))
     embeddings = np.array(embeddings)
 
+    # Train the model with the pre-calculated embeddings
     pbar.progress(0.8, text="Training model...")
-    # model.fit([doc.content for doc in docs], embeddings=embeddings, n_topics=num_clusters)
     model.fit([doc.content for doc in docs], embeddings=embeddings)
 
-
+    # Save the model
     pbar.progress(0.9, text="Saving model...")
     model.save(
         os.path.join(save_path, "model_safetensors"),
@@ -78,37 +74,3 @@ def train_model(docs: List[UploadedDocument], save_path: str, num_clusters: int 
     )
 
     pbar.progress(1.0, text="Training complete.")
-
-def train_model_2(docs: List[UploadedDocument], save_path: str, num_clusters: int = 5) -> None:
-    """
-    Train a BERTopic model on the pre-processed documents and save the model to the specified path.
-
-    Args:
-        docs (List[UploadedDocument]): Pre-processed documents.
-        save_path (str): Path to save the trained model.
-        num_clusters (int, optional): Number of clusters/topics to extract. Defaults to 5.
-    """
-    # Check if the number of clusters is greater than the number of documents
-    # TODO: i don't think this is needed in this implementation but leaving here for reference
-    if num_clusters > len(docs):
-        raise ValueError("Number of clusters must be less than or equal to the number of documents.")
-
-    # Ensure that the directory exists, create it if it doesn't
-    os.makedirs(save_path, exist_ok=True)
-
-    # Initialize the BERTopic model
-    model = BERTopic()
-
-    # Create embeddings using SentenceTransformer
-    embed_model_path = "sentence-transformers/all-MiniLM-L6-v2"
-    embedder = SentenceTransformer(embed_model_path)
-    embeddings = embedder.encode([doc.content for doc in docs])
-
-    # Train the model
-    topics, _ = model.fit_transform([doc.content for doc in docs], embeddings)
-
-    # Save the model: https://maartengr.github.io/BERTopic/api/bertopic.html#bertopic._bertopic.BERTopic.save
-   # Save the model using all three methods listed in documentation
-    model.save(os.path.join(save_path, "model.pickle"), serialization="pickle")
-    model.save(os.path.join(save_path, "model_safetensors"), serialization="safetensors", save_embedding_model=True, save_ctfidf=False)
-    model.save(os.path.join(save_path, "model_pytorch"), serialization="pytorch")
