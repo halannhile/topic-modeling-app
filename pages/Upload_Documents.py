@@ -119,6 +119,10 @@ with training_tab:
             "Enter the path to save the trained model:", value=default_model_path
         )
         valid_path = os.path.exists(os.path.dirname(model_path))
+        if not valid_path:
+            st.warning(
+                "That path does not exist. Press 'Train Topic Model' to create it."
+            )
 
         if st.button(
             "Train Topic Model",

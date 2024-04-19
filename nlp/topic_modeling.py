@@ -33,7 +33,11 @@ def train_model(docs: list[UploadedDocument], save_path: str) -> None:
         save_path (str): Path to save the trained model.
     """
     # Ensure that the directory exists, create it if it doesn't
-    os.makedirs(save_path, exist_ok=True)
+    try:
+        os.makedirs(save_path, exist_ok=True)
+    except OSError:
+        st.error(f"Could not create directory at {save_path}")
+        return
 
     pbar = st.progress(0.0, text="Initializing model...")
 
