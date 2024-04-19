@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 from nlp.topic_modeling import get_pretrained_model, transform_doc_pretrained
 from nlp.topic_visualizations import visualize_topics
@@ -7,14 +6,14 @@ from database import init_db
 from database.models import Document
 from sqlalchemy import func
 
-from bertopic import BERTopic
+from umap import UMAP
 
 
-def display_visualizations(model_path, texts):
+def display_single_visualizations(model_path, texts):
 
     model = get_pretrained_model(model_path)
 
-    plot_title = f"Topic Bubbles for BERTopicWikipedia"
+    plot_title = f"Topic Bubbles for Pretrained Model"
 
     topic_vis = visualize_topics(
         model,
@@ -24,7 +23,7 @@ def display_visualizations(model_path, texts):
         title=plot_title,
         width=800,
         height=800,
-        new_document=texts[0],
+        new_documents=texts,
     )
     topic_vis.update_layout(
         title_font=dict(color="white"),
@@ -35,8 +34,19 @@ def display_visualizations(model_path, texts):
 
     st.plotly_chart(topic_vis)
 
-    # doc_vis = model.visualize_documents(texts)
-    # st.plotly_chart(doc_vis)
+def display_dataset_visualizations(model_path, texts):
+
+    model = get_pretrained_model(model_path)
+
+    embeddings = model.embedding_model.embed(texts)
+    reduced_embeddings = UMAP(n_neighbors=10, n_components=2, min_dist=0.0, metric='cosine').fit_transform(embeddings)
+    doc_vis = model.visualize_documents(texts, reduced_embeddings=reduced_embeddings)
+    doc_vis.update_layout(
+        title_font=dict(color="white"),
+        width=800,
+        height=800
+    )
+    st.plotly_chart(doc_vis)
 
 
 if __name__ == "__main__":
@@ -81,5 +91,16 @@ if __name__ == "__main__":
         )
         texts = [doc.content for doc in document_list]
 
-        with st.spinner("Creating your visualizations:"):
-            display_visualizations(selected_model, texts)
+        if len(texts) == 1:
+            idx, probs, topic = transform_doc_pretrained(document_list[0])
+            txt = st.text_area(
+                f"You selected a single document: {document_list[0].filename}\n\n The model classifies it as the topic {topic} with {round(probs*100, 3)}% probability",
+                texts[0],
+                height = 500
+            )
+            with st.spinner("Creating your visualizations:"):
+                display_single_visualizations(selected_model, texts)
+        else:
+            st.markdown("You selected a dataset. Visualizing document representations may take a while:")
+            with st.spinner("Creating dataset visualizations:"):
+                display_dataset_visualizations(selected_model, texts)
