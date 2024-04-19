@@ -136,8 +136,8 @@ with training_tab:
             db.save_batch_to_db(
                 docs,
                 upload_type="dataset",
-                topics="",
-                probabilities="",
+                topics="Not available for dataset upload",
+                probabilities="Not available for dataset upload",
                 model_names=model_path,  # Saving model path as model_names for now
                 path_to_models=model_path,
                 prog_bar=pbar,
