@@ -77,6 +77,7 @@ def visualize_topics(topic_model,
     # Embed c-TF-IDF into 2D
     all_topics = sorted(list(topic_model.get_topics().keys()))
     indices = np.array([all_topics.index(topic) for topic in topics])
+    print(topic_model)
 
     if topic_model.topic_embeddings_ is not None:
         embeddings = topic_model.topic_embeddings_[indices]
@@ -96,7 +97,7 @@ def visualize_topics(topic_model,
     doc_embedding = topic_model.embedding_model.embed(new_document)
     doc_projection = umap_model.transform([doc_embedding])
     new_doc_df = pd.DataFrame({"x": doc_projection[0][0], "y": doc_projection[0][1],
-                                "Topic": "New Document", "Words": new_document, "Size": [1000]})
+                                "Topic": "New Document", "Words": new_document[:25], "Size": [1000]})
     df = pd.concat([df, new_doc_df], ignore_index=True)
 
     return _plotly_topic_visualization(df, topic_list, title, width, height)
