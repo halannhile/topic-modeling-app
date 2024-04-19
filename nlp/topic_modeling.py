@@ -67,7 +67,7 @@ def train_model(docs: list[UploadedDocument], save_path: str) -> None:
     # Save the model
     pbar.progress(0.9, text="Saving model...")
     model.save(
-        os.path.join(save_path, "model_safetensors"),
+        save_path,
         serialization="safetensors",
         save_embedding_model=embed_model_path,
         save_ctfidf=True,
