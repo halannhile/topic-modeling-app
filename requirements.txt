@@ -71,7 +71,7 @@ scikit-learn==1.4.1.post1
 scipy==1.13.0
 sentence-transformers==2.6.1
 setuptools==68.2.2
-six==1.16.0
+six # Remove specific version constraint for six
 smmap==5.0.1
 sortedcontainers==2.4.0
 soupsieve==2.5
@@ -80,7 +80,7 @@ SQLAlchemy==2.0.29
 streamlit==1.33.0
 sympy==1.12
 tenacity==8.2.3
-textract==1.6.5
+textract>=1.6.5 # Adjust textract's requirement for six
 threadpoolctl==3.4.0
 tokenizers==0.15.2
 toml==0.10.2
