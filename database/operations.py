@@ -1,6 +1,7 @@
 from typing import Literal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from streamlit.delta_generator import DeltaGenerator
 
 from nlp.utils import UploadedDocument
 
@@ -80,31 +81,32 @@ class DatabaseOperations:
         upload_type: Literal["documents", "dataset"],
         topics,
         probabilities,
+        model_names,
+        path_to_models,
+        prog_bar: DeltaGenerator | None = None,
     ):
         session = self.Session()
-        batch_number = self.get_latest_batch_number() + 1
+        batch_number = (
+            self.get_latest_batch_number() + 1
+        )  # TODO: not working correctly for zip upload yet
+
         try:
-            for doc in docs:
-                # check if the document already exists in the database for the given upload type
-                existing_document = (
-                    session.query(Document)
-                    .filter_by(filename=doc.filename, upload_type=upload_type)
-                    .first()
+            for i, doc in enumerate(docs):
+                if prog_bar:
+                    prog_bar.progress(i / len(docs))
+
+                content_str = doc.content
+                document = Document(
+                    filename=doc.filename,
+                    batch_number=batch_number,
+                    content=content_str,
+                    upload_type=upload_type,
+                    topics=topics,
+                    probabilities=probabilities,
+                    model_names=model_names,
+                    path_to_models=path_to_models,
                 )
-                if existing_document:
-                    existing_document.content = doc.content
-                else:
-                    # if the document does not exist for the given upload type, create a new record
-                    content_str = doc.content
-                    document = Document(
-                        filename=doc.filename,
-                        batch_number=batch_number,
-                        content=content_str,
-                        upload_type=upload_type,
-                        topics=topics,
-                        probabilities=probabilities,
-                    )
-                    session.add(document)
+                session.add(document)
             session.commit()
             session.close()
             print("Documents saved successfully.")
@@ -113,24 +115,52 @@ class DatabaseOperations:
             session.close()
             print(f"Error saving documents: {e}")
 
-    def get_documents(self, batch_number=None):
+    def get_documents(
+        self,
+        batch_number: int | None = None,
+        upload_type: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ):
         session = self.Session()
-        if batch_number is None:
-            documents = session.query(Document).all()
-        else:
-            documents = (
-                session.query(Document).filter_by(batch_number=batch_number).all()
-            )
+        documents = session.query(Document)
+        if batch_number is not None:
+            documents = documents.filter_by(batch_number=batch_number)
+        if upload_type is not None:
+            documents = documents.filter_by(upload_type=upload_type)
+        if offset is not None:
+            documents = documents.offset(offset)
+        if limit is not None:
+            documents = documents.limit(limit)
+
+        result = documents.all()
         session.close()
-        return documents
+        return result
 
     def get_all_documents(self):
         session = self.Session()
         documents = session.query(
-            Document.filename, Document.content, Document.topics, Document.probabilities
+            Document.filename,
+            Document.content,
+            Document.topics,
+            Document.probabilities,
+            Document.model_names,
+            Document.path_to_models,
         ).all()
         session.close()
         return documents
+
+    def get_all_batches(self) -> list[int]:
+        session = self.Session()
+        # get all distinct batch numbers in ascending order
+        batch_numbers = (
+            session.query(Document.batch_number)
+            .distinct()
+            .order_by(Document.batch_number)
+            .all()
+        )
+        session.close()
+        return [batch_number[0] for batch_number in batch_numbers]
 
     def clear_database(self):
         session = self.Session()
@@ -159,6 +189,21 @@ class DatabaseOperations:
         finally:
             session.close()
 
+    def delete_batch(self, batch_number):
+        session = self.Session()
+        try:
+            # Delete all documents with the specified batch number
+            session.query(Document).filter_by(batch_number=batch_number).delete()
+            session.commit()
+            print(
+                f"All documents with batch number {batch_number} deleted successfully."
+            )
+        except Exception as e:
+            session.rollback()
+            print(f"Error deleting documents with batch number {batch_number}: {e}")
+        finally:
+            session.close()
+
     def get_latest_batch_number(self) -> int:
         session = self.Session()
         latest_batch = (
@@ -170,3 +215,16 @@ class DatabaseOperations:
             return latest_batch.batch_number  # type: ignore
         else:
             return 0  # return 0 if no batches exist
+
+    def get_unique_values(self, column_name):
+        session = self.Session()
+        try:
+            unique_values = (
+                session.query(getattr(Document, column_name)).distinct().all()
+            )
+            session.close()
+            return [value[0] for value in unique_values]
+        except Exception as e:
+            session.close()
+            print(f"Error fetching unique values for {column_name}: {e}")
+            return []

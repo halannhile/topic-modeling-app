@@ -1,3 +1,8 @@
+
+.DS_*
+*.db
+trained_models/*
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
@@ -175,4 +180,3 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-.DS_*

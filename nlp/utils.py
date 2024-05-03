@@ -5,8 +5,8 @@ import tempfile
 from typing import Sequence
 from zipfile import ZipFile
 
-from . import SUPPORTED_INPUT_FORMATS
-
+# Define supported input formats
+SUPPORTED_INPUT_FORMATS = ["txt", "docx"]
 
 class UploadedDocument:
     def __init__(self, content: str, filename: str):
@@ -15,8 +15,13 @@ class UploadedDocument:
 
     @staticmethod
     def from_txt(uploaded_file: BytesIO) -> "UploadedDocument":
-        content = uploaded_file.getvalue().decode("utf-8")
+        try:
+            content = uploaded_file.getvalue().decode("utf-8")
+        except UnicodeDecodeError:
+            content = uploaded_file.getvalue().decode("latin-1")
+
         return UploadedDocument(content, uploaded_file.name)
+
 
     @staticmethod
     def from_docx(uploaded_file: BytesIO) -> "UploadedDocument":

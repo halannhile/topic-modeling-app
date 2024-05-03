@@ -16,3 +16,5 @@ class Document(Base):
     upload_type = Column(String)  # distinguish between 'dataset' upload and 'documents' upload
     topics = Column(String)  # store topics detected
     probabilities = Column(String)  # store corresponding probabilities
+    model_names = Column(String)
+    path_to_models = Column(String)
