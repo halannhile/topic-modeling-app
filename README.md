@@ -19,4 +19,4 @@ docker build -t your-app-name .
 ```
  docker run -p 8501:8501 your-app-name
 ```
-Navigate to http://localhost:8501/Your_Documents to access app.
+Navigate to http://localhost:8501 to access app.
