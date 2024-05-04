@@ -1,4 +1,4 @@
-from turtle import onclick
+# from turtle import onclick
 from database import init_db
 import pandas as pd
 import streamlit as st
