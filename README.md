@@ -12,3 +12,16 @@ python -m pip install -r requirements.txt
 ```
 python -m streamlit run 1_Your_Documents.py
 ```
+3. Build and run Docker
+```
+docker build -t your-app-name .
+```
+```
+ docker run -p 8501:8501 your-app-name
+```
+Navigate to http://localhost:8501 to access app.
+
+4. Run unit tests
+```
+python -m unittest discover -s unit_tests
+```
