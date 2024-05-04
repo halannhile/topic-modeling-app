@@ -1,6 +1,5 @@
-# topic-modeling-app
-COSI-217B Final Project
-
+# EasyTopics
+[Link to app](https://easytopics.streamlit.app/)
 ## Running the app
 1. Setup virutal environment
 ```
