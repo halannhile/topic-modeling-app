@@ -17,6 +17,6 @@ python -m streamlit run 1_Your_Documents.py
 docker build -t your-app-name .
 ```
 ```
- docker run -p 8501:8501 test-app-3
+ docker run -p 8501:8501 your-app-name
 ```
 Navigate to http://localhost:8501/Your_Documents to access app.
