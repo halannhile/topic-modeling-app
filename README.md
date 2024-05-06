@@ -1,8 +1,8 @@
-
-
 # EasyTopics
 
-A web app to detect, analyze and visualize topics from your documents using BERTopic.
+A web app to detect, analyze and visualize topics from your documents using BERTopic. 
+
+Developers: Chris Tam, Ian Bulovic, Nhi Le (Brandeis University)
 
 [**Link to app**](https://easytopics.streamlit.app/)
 
