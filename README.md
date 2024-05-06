@@ -3,7 +3,10 @@
 # EasyTopics
 
 A web app to detect, analyze and visualize topics from your documents using BERTopic.
+
 [**Link to app**](https://easytopics.streamlit.app/)
+
+[**Project report**](https://github.com/halannhile/topic-modeling-app/blob/master/static/COSI-217b%20Final%20Report.pdf)
 
 ## Table of contents: 
 
