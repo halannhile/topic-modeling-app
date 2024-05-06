@@ -11,6 +11,8 @@ A web app to detect, analyze and visualize topics from your documents using BERT
     + [Homepage](#homepage)
     + [Upload Documents page](#upload-documents-page)
     + [Topic Modeling Results page](#topic-modeling-results-page)
+    + [Custom Model Visualizations page](#custom-model-visualizations-page)
+
   * [Running the app](#running-the-app)
     + [Option 1 (recommended): Docker](#option-1--recommended---docker)
     + [Option 2: Running from source code](#option-2--running-from-source-code)
@@ -19,6 +21,8 @@ A web app to detect, analyze and visualize topics from your documents using BERT
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 ## App overview
+
+Note: Some of the pages in the app might take a few minutes to load because of the underlying BERTopic model.
 
 ### Homepage
 
@@ -60,6 +64,8 @@ You can also view different topic visualizations of your trained model:
 ## Running the app
 
 ### Option 1 (recommended): Docker
+
+Note: it may take a few minutes for the build process to complete. 
 
 1. Building the image: 
 ```
